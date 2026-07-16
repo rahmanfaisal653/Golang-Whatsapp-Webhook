@@ -1,0 +1,7 @@
+src/session/
+*.db
+*.db-shm
+*.db-wal
+.env
+whatsmeow-base
+whatsmeow-base.exe
