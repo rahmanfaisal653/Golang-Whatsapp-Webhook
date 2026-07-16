@@ -11,6 +11,7 @@ import (
 
 	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 	_ "go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -39,7 +40,8 @@ func main() {
 
 	client := whatsmeow.NewClient(device, waLog.Stdout("WhatsApp", "INFO", true))
 
-	handler := lib.NewCommandHandler(ctx, client)
+	ownerJID := parseOwnerJID()
+	handler := lib.NewCommandHandler(ctx, client, ownerJID)
 	handler.Register(owner.PingCommand{})
 	handler.LogSummary()
 	client.AddEventHandler(handler.Handle)
@@ -92,4 +94,17 @@ func sqliteURI(path string) string {
 func fatal(action string, err error) {
 	fmt.Fprintf(os.Stderr, "%s: %v\n", action, err)
 	os.Exit(1)
+}
+
+func parseOwnerJID() types.JID {
+	raw := os.Getenv("OWNER_JID")
+	if raw == "" {
+		return types.JID{}
+	}
+	jid, err := types.ParseJID(raw)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid OWNER_JID %q: %v\n", raw, err)
+		return types.JID{}
+	}
+	return jid
 }
