@@ -55,8 +55,9 @@ func (h *CommandHandler) Handle(event any) {
 	if !ok {
 		return
 	}
-	fmt.Printf("[%s] %s: %s\n", msg.Info.Chat, msg.Info.Sender, text)
+	fmt.Printf("[%s] %s: %s\n", msg.Info.Chat, SenderJID(msg.Info), text)
 	if err := cmd.Execute(h.ctx, h.client, msg); err != nil {
 		fmt.Fprintf(os.Stderr, "command %s: %v\n", cmd.Name(), err)
 	}
 }
+

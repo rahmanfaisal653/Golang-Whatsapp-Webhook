@@ -49,7 +49,7 @@ func main() {
 	}
 	defer client.Disconnect()
 
-	fmt.Println("Connected. Press Ctrl+C to stop.")
+	fmt.Println("Connected. Press CTRL+C to stop.")
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
