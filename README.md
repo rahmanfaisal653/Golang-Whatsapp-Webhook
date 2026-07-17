@@ -1,38 +1,190 @@
-# Whatsmeow Go Base
+# Bot WA Krumbuk
 
-Minimal WhatsApp bot base using [whatsmeow](https://github.com/tulir/whatsmeow).
+Minimal WhatsApp notifier using Go + whatsmeow.
 
-## Requirements
+Purpose:
 
-- Go 1.25+ (upstream currently specifies Go 1.25)
-- A WhatsApp account to link
-- Terminal access for the QR code
+```text
+WhatsApp bot runs locally/server-side
+local HTTP API receives notify requests
+bot sends message to WhatsApp private/group chat
+```
+
+No config system. No dashboard. No public webhook framework. Just a tiny notifier.
+
+## Features
+
+- WhatsApp QR login / saved session
+- Local notifier API: `POST /notify`
+- WA command `.test` calls local API and sends test notification
+- Utility commands: `.ping`, `.about`, `.menu`, `.uptime`, `.id`, `.groups`
+
+## Project structure
+
+```text
+main.go                    app boot, WA connect, command registration
+src/notify/listen.go        local HTTP notifier server
+src/lib/commands.go         WhatsApp command router
+src/lib/jid.go              shared JID helpers
+commands/owner/ping.go      .ping command
+commands/owner/basic.go     .about .menu .uptime .id
+commands/owner/groups.go    .groups command
+commands/owner/test.go      .test command → POST localhost /notify
+src/session/                WhatsApp session DB, ignored by git
+```
 
 ## Run
 
-```powershell
+```bash
 go run .
 ```
 
-First run prints a QR code. Open WhatsApp, go to **Linked devices**, then scan it. The local session persists in `data/whatsmeow.db`; it is excluded from Git.
+First run prints QR. Scan from WhatsApp:
 
-Send `.ping` from another account/chat. The bot replies `pong`.
+```text
+WhatsApp → Linked devices → Link a device
+```
 
-## Reset session
+After login, session is saved in:
 
-Stop the process. Delete `data/whatsmeow.db` plus any `-wal` and `-shm` files. Run again to link a new device.
+```text
+src/session/whatsmeow.db
+```
 
-## Verify
+## Local notifier API
 
-```powershell
-gofmt -w main.go main_test.go
+Server:
+
+```text
+http://127.0.0.1:18080/notify
+```
+
+Method:
+
+```text
+POST
+```
+
+Header:
+
+```text
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "to": "120363xxxxx@g.us",
+  "message": "notify applied"
+}
+```
+
+Response on success:
+
+```text
+notify applied
+```
+
+### curl example
+
+```bash
+curl -X POST http://127.0.0.1:18080/notify \
+  -H 'Content-Type: application/json' \
+  -d '{"to":"120363xxxxx@g.us","message":"notify applied"}'
+```
+
+### Postman example
+
+```text
+Method: POST
+URL: http://127.0.0.1:18080/notify
+Headers:
+  Content-Type: application/json
+Body → raw → JSON:
+{
+  "to": "120363xxxxx@g.us",
+  "message": "notify applied"
+}
+```
+
+## WhatsApp commands
+
+```text
+.ping    check bot
+.about   bot info
+.menu    command list
+.uptime  bot runtime
+.id      show sender/chat JID
+.groups  list joined WhatsApp groups + group JID
+.test    call localhost /notify and send "notify applied" to current chat
+```
+
+## Getting target JID
+
+Private chat:
+
+```text
+.id
+```
+
+Use:
+
+```text
+Sender: 628xxx@s.whatsapp.net
+```
+
+Group:
+
+```text
+.groups
+```
+
+Use group JID:
+
+```text
+120363xxxxx@g.us
+```
+
+Bot must be inside target group.
+
+## How `.test` works
+
+User sends:
+
+```text
+.test
+```
+
+Flow:
+
+```text
+.test command
+→ POST http://127.0.0.1:18080/notify
+→ body uses current chat JID
+→ notifier sends "notify applied" back to that chat
+```
+
+This proves:
+
+```text
+WA command router works
+local API works
+notifier can send WA message
+```
+
+## Verification
+
+```bash
+gofmt -w main.go commands/owner/*.go src/notify/*.go
 go test ./...
-go vet ./...
 go build ./...
 ```
 
-## Security
+## Security notes
 
-The SQLite database contains WhatsApp device credentials. Do not commit, share, or serve `data/`. This base intentionally has no arbitrary shell execution, runtime JavaScript evaluation, HTTP server, secrets, or external database.
-
-`ponytail:` commands use one pure matcher; replace it with a registry only when the command surface grows.
+- `src/session/` contains WhatsApp credentials. Do not commit/share it.
+- Notifier binds to `127.0.0.1`, local machine only.
+- Do not expose `/notify` publicly without adding auth.
+- This uses an unofficial WhatsApp library; avoid spammy sending.
+# Golang-Whatsapp-Webhook
