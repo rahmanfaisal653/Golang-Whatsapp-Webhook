@@ -1,4 +1,4 @@
-# Bot WA Krumbuk
+# Webhook Whatsapp Kroombox
 
 Minimal WhatsApp notifier using Go + whatsmeow.
 
