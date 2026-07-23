@@ -112,7 +112,7 @@ func (h *CommandHandler) Handle(event any) {
 		return
 	}
 
-	text := msg.Message.GetConversation()
+	text := messageText(msg.Message)
 	if text == "" {
 		return
 	}
@@ -144,6 +144,13 @@ func (h *CommandHandler) reply(msg *events.Message, text string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "reply: %v\n", err)
 	}
+}
+
+func messageText(message *waE2E.Message) string {
+	if text := message.GetConversation(); text != "" {
+		return text
+	}
+	return message.GetExtendedTextMessage().GetText()
 }
 
 func guardMsg(custom, fallback string) string {

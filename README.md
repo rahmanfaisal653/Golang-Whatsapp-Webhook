@@ -1,4 +1,5 @@
-# Webhook Whatsapp Kroombox
+
+# Webhook notifier Whatsapp
 
 Minimal WhatsApp notifier using Go + whatsmeow.
 
@@ -171,6 +172,13 @@ This proves:
 WA command router works
 local API works
 notifier can send WA message
+```
+
+## More docs
+
+```text
+docs/notifier.md      API reference
+docs/integration.md   beginner integration guide
 ```
 
 ## Verification

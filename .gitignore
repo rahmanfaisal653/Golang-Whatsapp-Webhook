@@ -3,5 +3,6 @@ src/session/
 *.db-shm
 *.db-wal
 .env
+config/hooks.local.json
 whatsmeow-base
 whatsmeow-base.exe
