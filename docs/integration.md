@@ -1,49 +1,41 @@
 # Integration Guide
 
-This guide is for beginners who want another app to send WhatsApp messages through GoWA.
-
-## What GoWA does
-
-GoWA is a small bridge:
+Use GoWA when another app needs to send WhatsApp notifications.
 
 ```text
-your app → HTTP POST /notify → GoWA → WhatsApp message
+your app → POST https://kroomhook.kroombox.com/notify → GoWA → WhatsApp message
 ```
 
-Your app does not talk to WhatsApp directly. Your app only sends JSON to GoWA.
+Your app does not connect to WhatsApp directly. It only sends JSON to the GoWA endpoint.
 
-## Requirements
-
-- GoWA is running.
-- GoWA is connected to WhatsApp.
-- Your app runs on the same machine as GoWA.
-- You know the target WhatsApp JID.
-
-Why same machine?
+## Public endpoint
 
 ```text
-GoWA listens on 127.0.0.1:18080
+POST https://kroomhook.kroombox.com/notify
 ```
 
-`127.0.0.1` means local machine only.
-
-## Step 1 — Run GoWA
-
-In the GoWA project folder:
-
-```bash
-go run .
-```
-
-Wait until you see:
+Headers:
 
 ```text
-Connected. Press CTRL+C to stop.
+Content-Type: application/json
 ```
 
-Keep this terminal open.
+Body:
 
-## Step 2 — Get target JID
+```json
+{
+  "to": "120363xxxxx@g.us",
+  "message": "Hello from my app"
+}
+```
+
+Success response:
+
+```text
+notify applied
+```
+
+## Get target JID
 
 Private chat:
 
@@ -71,7 +63,7 @@ Use:
 
 The bot must already be inside that group.
 
-## Step 3 — Test with Postman
+## Postman test
 
 Method:
 
@@ -82,7 +74,7 @@ POST
 URL:
 
 ```text
-http://127.0.0.1:18080/notify
+https://kroomhook.kroombox.com/notify
 ```
 
 Headers:
@@ -100,22 +92,16 @@ Body → raw → JSON:
 }
 ```
 
-Expected response:
+Expected:
 
 ```text
 notify applied
 ```
 
-Expected WhatsApp message:
-
-```text
-Hello from Postman
-```
-
-## Step 4 — Test with curl
+## curl example
 
 ```bash
-curl -X POST http://127.0.0.1:18080/notify \
+curl -X POST https://kroomhook.kroombox.com/notify \
   -H 'Content-Type: application/json' \
   -d '{"to":"120363xxxxx@g.us","message":"Hello from curl"}'
 ```
@@ -123,7 +109,7 @@ curl -X POST http://127.0.0.1:18080/notify \
 ## JavaScript / Node example
 
 ```js
-const res = await fetch("http://127.0.0.1:18080/notify", {
+const res = await fetch("https://kroomhook.kroombox.com/notify", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -135,6 +121,29 @@ const res = await fetch("http://127.0.0.1:18080/notify", {
 console.log(await res.text());
 ```
 
+Ticket form example:
+
+```js
+app.post("/tickets", async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  await fetch("https://kroomhook.kroombox.com/notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: "120363xxxxx@g.us",
+      message: `🎫 New Ticket
+Name: ${name}
+Email: ${email}
+Subject: ${subject}
+Message: ${message}`
+    })
+  });
+
+  res.send("ticket created");
+});
+```
+
 ## PHP example
 
 ```php
@@ -144,7 +153,7 @@ $payload = json_encode([
     "message" => "Hello from PHP"
 ]);
 
-$ch = curl_init("http://127.0.0.1:18080/notify");
+$ch = curl_init("https://kroomhook.kroombox.com/notify");
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
     CURLOPT_HTTPHEADER => ["Content-Type: application/json"],
@@ -176,7 +185,7 @@ func main() {
         "message": "Hello from Go",
     })
 
-    res, err := http.Post("http://127.0.0.1:18080/notify", "application/json", bytes.NewReader(payload))
+    res, err := http.Post("https://kroomhook.kroombox.com/notify", "application/json", bytes.NewReader(payload))
     if err != nil {
         panic(err)
     }
@@ -188,22 +197,30 @@ func main() {
 
 ## Common errors
 
-### Connection refused
-
-```text
-Failed to connect to 127.0.0.1 port 18080
-```
+### File not found
 
 Cause:
 
 ```text
-GoWA is not running
+request reached web server, but not GoWA /notify route
+```
+
+Usually:
+
+```text
+subdomain points to wrong server
+Nginx vhost not loaded
+HTTPS config handled by another server block
+wrong endpoint URL
 ```
 
 Fix:
 
-```bash
-go run .
+```text
+check Cloudflare DNS target
+check Nginx server_name
+check /notify proxy config
+reload Nginx
 ```
 
 ### Invalid notify request
@@ -242,25 +259,12 @@ send .groups
 copy exact JID
 ```
 
-### Only works on my laptop, not friend's website
+## Security note
 
-Cause:
+Current public endpoint has no auth.
 
 ```text
-127.0.0.1 is local-only
+Anyone who knows the URL can send WhatsApp messages through the bot.
 ```
 
-If another server must call GoWA, GoWA must run on that server too, or the API must be exposed safely with auth/HTTPS later.
-
-## Simple integration rule
-
-If your app can send this HTTP request:
-
-```json
-{
-  "to": "target jid",
-  "message": "text to send"
-}
-```
-
-Then your app can send WhatsApp notifications through GoWA.
+Use only for trusted testing. Add auth before serious/public use.

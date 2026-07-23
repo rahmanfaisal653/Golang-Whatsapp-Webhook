@@ -57,7 +57,7 @@ src/session/whatsmeow.db
 Server:
 
 ```text
-http://127.0.0.1:18080/notify
+https://kroomhook.kroombox.com/notify
 ```
 
 Method:
@@ -90,7 +90,7 @@ notify applied
 ### curl example
 
 ```bash
-curl -X POST http://127.0.0.1:18080/notify \
+curl -X POST https://kroomhook.kroombox.com/notify \
   -H 'Content-Type: application/json' \
   -d '{"to":"120363xxxxx@g.us","message":"notify applied"}'
 ```
@@ -99,7 +99,7 @@ curl -X POST http://127.0.0.1:18080/notify \
 
 ```text
 Method: POST
-URL: http://127.0.0.1:18080/notify
+URL: https://kroomhook.kroombox.com/notify
 Headers:
   Content-Type: application/json
 Body → raw → JSON:
@@ -161,7 +161,7 @@ Flow:
 
 ```text
 .test command
-→ POST http://127.0.0.1:18080/notify
+→ POST https://kroomhook.kroombox.com/notify
 → body uses current chat JID
 → notifier sends "notify applied" back to that chat
 ```
