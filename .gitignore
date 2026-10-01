@@ -7,3 +7,5 @@ config/hooks.local.json
 whatsmeow-base
 whatsmeow-base.exe
 gowa-nouvem
+@eaDir/
+*.png

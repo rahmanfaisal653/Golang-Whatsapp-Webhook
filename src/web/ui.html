@@ -83,9 +83,9 @@
     <!-- Sidebar Header: BotVista Brand -->
     <div class="p-5 flex items-center justify-between border-b border-sidebar-border/60 flex-shrink-0">
       <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('beranda')">
-        <div class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 flex-shrink-0">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        <div class="w-10 h-10 rounded-xl bg-[#25D366] flex items-center justify-center text-white shadow-md shadow-[#25D366]/25 flex-shrink-0 p-2">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
         </div>
         <div>
@@ -106,7 +106,9 @@
       </button>
 
       <button onclick="switchTab('scan')" id="nav-btn-scan" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-sidebar-hover">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <svg class="w-4 h-4 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
         <span>Bot WhatsApp</span>
       </button>
 
@@ -220,8 +222,10 @@
         <!-- Hero Welcome Banner with Mascot Illustration -->
         <div class="relative bg-gradient-to-r from-emerald-50 via-teal-50/60 to-white rounded-3xl p-6 md:p-8 border border-emerald-100 card-shadow flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden">
           <div class="flex items-center gap-5 z-10">
-            <div class="w-16 h-16 rounded-2xl bg-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/25 flex-shrink-0">
-              <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <div class="w-16 h-16 rounded-2xl bg-[#25D366] flex items-center justify-center text-white shadow-lg shadow-[#25D366]/25 flex-shrink-0 p-3">
+              <svg class="w-10 h-10" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
             </div>
             <div>
               <h2 class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">Selamat Datang, Muhammad Bagus!</h2>
@@ -233,7 +237,18 @@
           <div class="flex items-center gap-3 z-10 self-end md:self-center">
             <div class="px-4 py-2 rounded-2xl bg-white/80 backdrop-blur-md border border-emerald-200/80 shadow-sm flex items-center gap-3">
               <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs">
-                🤖
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                  <line x1="9" y1="1" x2="9" y2="4"/>
+                  <line x1="15" y1="1" x2="15" y2="4"/>
+                  <line x1="9" y1="20" x2="9" y2="23"/>
+                  <line x1="15" y1="20" x2="15" y2="23"/>
+                  <line x1="20" y1="9" x2="23" y2="9"/>
+                  <line x1="20" y1="14" x2="23" y2="14"/>
+                  <line x1="1" y1="9" x2="4" y2="9"/>
+                  <line x1="1" y1="14" x2="4" y2="14"/>
+                </svg>
               </div>
               <div>
                 <div class="text-[10px] text-slate-500 font-semibold">STATUS WORKER</div>
@@ -252,8 +267,10 @@
           <!-- Card 1: Total Bot -->
           <div onclick="switchTab('scan')" class="bg-white p-5 rounded-2xl border border-slate-100 card-shadow card-shadow-hover cursor-pointer transition-all flex flex-col justify-between">
             <div class="flex items-center justify-between">
-              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <div class="w-10 h-10 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center p-2">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
               </div>
               <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
@@ -417,8 +434,10 @@
                     <tr class="hover:bg-slate-50 transition-colors">
                       <td class="py-3 px-3">
                         <div class="flex items-center gap-3">
-                          <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                            WA
+                          <div class="w-8 h-8 rounded-xl bg-[#25D366] text-white flex items-center justify-center p-1.5 shadow-xs flex-shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
                           </div>
                           <div>
                             <div class="font-bold text-slate-900" id="dash-bot-phone">WhatsApp Gateway</div>
@@ -465,8 +484,10 @@
               <div class="space-y-3">
                 <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
                   <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <div class="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center p-1.5 shadow-xs">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                      </svg>
                     </div>
                     <div>
                       <div class="text-xs font-bold text-slate-800">Customer Service</div>
@@ -479,7 +500,13 @@
                 <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                      🤖
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="10" rx="2"/>
+                        <circle cx="12" cy="5" r="2"/>
+                        <path d="M12 7v4"/>
+                        <line x1="8" y1="16" x2="8" y2="16"/>
+                        <line x1="16" y1="16" x2="16" y2="16"/>
+                      </svg>
                     </div>
                     <div>
                       <div class="text-xs font-bold text-slate-800">Auto-Responder</div>
@@ -497,32 +524,53 @@
 
               <div class="grid grid-cols-2 gap-3">
                 <button onclick="switchTab('scan')" class="p-3.5 rounded-xl bg-slate-50 hover:bg-emerald-50/70 border border-slate-100 hover:border-emerald-200 text-left transition-all group">
-                  <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm mb-2 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                    +
+                  <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mb-2 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="7" height="7"/>
+                      <rect x="14" y="3" width="7" height="7"/>
+                      <rect x="14" y="14" width="7" height="7"/>
+                      <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
                   </div>
                   <div class="text-xs font-bold text-slate-800">Koneksi QR</div>
                   <div class="text-[10px] text-slate-400">Scan & sambungkan</div>
                 </button>
 
                 <button onclick="switchTab('features')" class="p-3.5 rounded-xl bg-slate-50 hover:bg-blue-50/70 border border-slate-100 hover:border-blue-200 text-left transition-all group">
-                  <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm mb-2 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                    ⚡
+                  <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mb-2 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="4" y1="21" x2="4" y2="14"/>
+                      <line x1="4" y1="10" x2="4" y2="3"/>
+                      <line x1="12" y1="21" x2="12" y2="12"/>
+                      <line x1="12" y1="8" x2="12" y2="3"/>
+                      <line x1="20" y1="21" x2="20" y2="16"/>
+                      <line x1="20" y1="12" x2="20" y2="3"/>
+                      <line x1="1" y1="14" x2="7" y2="14"/>
+                      <line x1="9" y1="8" x2="15" y2="8"/>
+                      <line x1="17" y1="16" x2="23" y2="16"/>
+                    </svg>
                   </div>
                   <div class="text-xs font-bold text-slate-800">Kelola Fitur</div>
                   <div class="text-[10px] text-slate-400">Atur perintah bot</div>
                 </button>
 
                 <button onclick="switchTab('webhook')" class="p-3.5 rounded-xl bg-slate-50 hover:bg-purple-50/70 border border-slate-100 hover:border-purple-200 text-left transition-all group">
-                  <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm mb-2 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                    🔗
+                  <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center mb-2 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
                   </div>
                   <div class="text-xs font-bold text-slate-800">Webhook</div>
                   <div class="text-[10px] text-slate-400">Atur notifier API</div>
                 </button>
 
                 <button onclick="switchTab('send')" class="p-3.5 rounded-xl bg-slate-50 hover:bg-teal-50/70 border border-slate-100 hover:border-teal-200 text-left transition-all group">
-                  <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center text-sm mb-2 group-hover:bg-teal-500 group-hover:text-white transition-colors">
-                    ✉️
+                  <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center mb-2 group-hover:bg-teal-500 group-hover:text-white transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
                   </div>
                   <div class="text-xs font-bold text-slate-800">Kirim Pesan</div>
                   <div class="text-[10px] text-slate-400">Kirim WhatsApp</div>
@@ -532,8 +580,10 @@
 
             <!-- Call to Action Banner "Siap untuk mulai?" -->
             <div class="bg-gradient-to-b from-emerald-50/70 to-teal-50/40 p-5 rounded-2xl border border-emerald-100 card-shadow text-center space-y-3">
-              <div class="w-12 h-12 rounded-2xl bg-white text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm text-xl">
-                🚀
+              <div class="w-12 h-12 rounded-2xl bg-white text-[#25D366] border border-emerald-200 flex items-center justify-center mx-auto shadow-sm p-2.5">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
               </div>
               <h4 class="text-sm font-bold text-slate-900">Siap untuk mulai?</h4>
               <p class="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">Kirim pesan WhatsApp atau konfigurasi respon otomatis bot Anda sekarang.</p>
@@ -581,8 +631,8 @@
         <div id="card-connected-box" class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 card-shadow hidden max-w-4xl mx-auto space-y-6">
           <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
             <div class="flex items-center gap-4">
-              <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center flex-shrink-0 shadow-xs">
+                <svg class="w-9 h-9 fill-[#25D366]" viewBox="0 0 24 24"><path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.477-.15-.678.15-.2.3-.778.98-.954 1.18-.175.2-.351.225-.652.075-.301-.15-1.27-.468-2.42-1.494-.895-.798-1.5-1.783-1.676-2.083-.175-.3-.019-.462.132-.612.136-.135.301-.35.452-.526.15-.175.2-.3.301-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.633-.928-2.238-.244-.59-.493-.51-.678-.52l-.578-.01c-.2 0-.526.075-.802.375-.276.3-1.053 1.03-1.053 2.511 0 1.482 1.079 2.912 1.229 3.113.15.2 2.124 3.242 5.145 4.547.719.31 1.28.497 1.718.636.722.23 1.378.197 1.898.12.578-.087 1.78-.727 2.03-1.43.25-.703.25-1.306.175-1.43-.075-.125-.276-.2-.577-.35zM12.04 2C6.52 2 2.04 6.48 2.04 12c0 1.89.52 3.65 1.43 5.17L2 22l4.98-1.43C8.42 21.43 10.18 22 12.04 22c5.52 0 10-4.48 10-10S17.56 2 12.04 2zm0 18.23c-1.61 0-3.11-.47-4.38-1.28l-.31-.2-2.96.85.86-2.88-.2-.32a8.18 8.18 0 0 1-1.26-4.4c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.69 8.23-8.23 8.23z"/></svg>
               </div>
               <div>
                 <div class="flex items-center gap-2.5">
@@ -636,9 +686,9 @@
         <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 card-shadow max-w-3xl mx-auto space-y-5">
           <div class="flex items-center justify-between pb-4 border-b border-slate-100">
             <div>
-              <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <svg class="w-5 h-5 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                WhatsApp Message Sender
+              <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+                <svg class="w-5 h-5 fill-[#25D366]" viewBox="0 0 24 24"><path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.477-.15-.678.15-.2.3-.778.98-.954 1.18-.175.2-.351.225-.652.075-.301-.15-1.27-.468-2.42-1.494-.895-.798-1.5-1.783-1.676-2.083-.175-.3-.019-.462.132-.612.136-.135.301-.35.452-.526.15-.175.2-.3.301-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.633-.928-2.238-.244-.59-.493-.51-.678-.52l-.578-.01c-.2 0-.526.075-.802.375-.276.3-1.053 1.03-1.053 2.511 0 1.482 1.079 2.912 1.229 3.113.15.2 2.124 3.242 5.145 4.547.719.31 1.28.497 1.718.636.722.23 1.378.197 1.898.12.578-.087 1.78-.727 2.03-1.43.25-.703.25-1.306.175-1.43-.075-.125-.276-.2-.577-.35zM12.04 2C6.52 2 2.04 6.48 2.04 12c0 1.89.52 3.65 1.43 5.17L2 22l4.98-1.43C8.42 21.43 10.18 22 12.04 22c5.52 0 10-4.48 10-10S17.56 2 12.04 2zm0 18.23c-1.61 0-3.11-.47-4.38-1.28l-.31-.2-2.96.85.86-2.88-.2-.32a8.18 8.18 0 0 1-1.26-4.4c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.69 8.23-8.23 8.23z"/></svg>
+                <span>WhatsApp Message Sender</span>
               </h2>
               <p class="text-xs text-slate-500 mt-0.5">Kirim pesan WhatsApp langsung ke nomor pribadi atau ke grup secara instan.</p>
             </div>
@@ -671,10 +721,19 @@
               <div class="flex items-center justify-between mb-1.5">
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Isi Pesan WhatsApp</label>
                 <div class="flex items-center gap-1.5 text-xs text-slate-500">
-                  <span class="text-[11px]">Template:</span>
-                  <button type="button" onclick="insertTemplate('notif')" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold">Notifikasi</button>
-                  <button type="button" onclick="insertTemplate('alert')" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold">Alert</button>
-                  <button type="button" onclick="insertTemplate('otp')" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold">OTP</button>
+                  <span class="text-[11px] text-slate-400 font-medium">Template:</span>
+                  <button type="button" onclick="insertTemplate('notif')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                    <svg class="w-3 h-3 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span>Notifikasi</span>
+                  </button>
+                  <button type="button" onclick="insertTemplate('alert')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                    <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>Alert</span>
+                  </button>
+                  <button type="button" onclick="insertTemplate('otp')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                    <svg class="w-3 h-3 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5M19 5l-2.5 2.5M9 11l-7 7v3h3l7-7m0 0a5 5 0 1 0-7-7 5 5 0 0 0 7 7z"/></svg>
+                    <span>OTP</span>
+                  </button>
                 </div>
               </div>
               <textarea id="input-message" rows="5" placeholder="Tuliskan pesan WhatsApp di sini..." required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-sm transition-all"></textarea>
@@ -948,7 +1007,10 @@
                 <div>
                   <label class="block text-slate-700 font-bold mb-1">Target "to" (Nomor atau JID Grup):</label>
                   <input type="text" id="test-to" placeholder="Contoh: 6282218542122 atau 082218542122" class="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-800 font-mono text-xs focus:outline-none focus:border-brand-500" />
-                  <p class="text-[11px] text-slate-400 mt-1">💡 Otomatis mengenali <b>08xxx</b>, <b>628xxx</b>, <b>+62 8xxx</b>, maupun JID grup (<b>...@g.us</b>).</p>
+                  <p class="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-brand-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>Otomatis mengenali <b>08xxx</b>, <b>628xxx</b>, <b>+62 8xxx</b>, maupun JID grup (<b>...@g.us</b>).</span>
+                  </p>
                 </div>
                 <div>
                   <label class="block text-slate-700 font-bold mb-1">Pesan "message":</label>
@@ -1352,12 +1414,12 @@
     function insertTemplate(type) {
       const msg = document.getElementById('input-message');
       if (type === 'notif') {
-        msg.value = '📌 *NOTIFIKASI SISTEM*\n\nLayanan BotVista berhasil memproses tugas Anda.\nWaktu: ' + new Date().toLocaleTimeString('id-ID');
+        msg.value = '*[NOTIFIKASI SISTEM]*\n\nLayanan BotVista berhasil memproses tugas Anda.\nWaktu: ' + new Date().toLocaleTimeString('id-ID');
       } else if (type === 'alert') {
-        msg.value = '⚠️ *PERINGATAN SISTEM*\n\nTerdeteksi beban kerja tinggi atau event kritis pada server.\nHarap segera periksa dashboard operasional.';
+        msg.value = '*[PERINGATAN SISTEM]*\n\nTerdeteksi beban kerja tinggi atau event kritis pada server.\nHarap segera periksa dashboard operasional.';
       } else if (type === 'otp') {
         const randCode = Math.floor(100000 + Math.random() * 900000);
-        msg.value = '🔑 *KODE VERIFIKASI*\n\nKode OTP Anda adalah: *' + randCode + '*\nJangan bagikan kode ini kepada siapa pun.';
+        msg.value = '*[KODE VERIFIKASI OTP]*\n\nKode verifikasi Anda adalah: *' + randCode + '*\nJangan bagikan kode ini kepada siapa pun.';
       }
     }
 
