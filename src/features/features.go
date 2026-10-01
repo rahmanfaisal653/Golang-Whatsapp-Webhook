@@ -39,10 +39,24 @@ type CustomFeature struct {
 	CreatedAt   string `json:"created_at"`
 }
 
+type WebhookIntegration struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Source      string `json:"source"`
+	Target      string `json:"target"`
+	TargetName  string `json:"target_name"`
+	Endpoint    string `json:"endpoint"`
+	Enabled     bool   `json:"enabled"`
+	CreatedAt   string `json:"created_at"`
+	LastUsed    string `json:"last_used"`
+}
+
 type Config struct {
-	Settings GlobalSettings   `json:"settings"`
-	Builtins []BuiltinCommand `json:"builtins"`
-	Customs  []CustomFeature  `json:"customs"`
+	Settings GlobalSettings       `json:"settings"`
+	Builtins []BuiltinCommand     `json:"builtins"`
+	Customs  []CustomFeature      `json:"customs"`
+	Webhooks []WebhookIntegration `json:"webhooks"`
 }
 
 type Manager struct {
@@ -79,6 +93,32 @@ func DefaultConfig() Config {
 				Target:      "all",
 				Enabled:     true,
 				CreatedAt:   time.Now().Format("2006-01-02 15:04"),
+			},
+		},
+		Webhooks: []WebhookIntegration{
+			{
+				ID:          "wh_kp_guard_nas",
+				Name:        "KP-Guard NAS (Thermal & Load Governor)",
+				Description: "Pemantau suhu CPU (≥88°C, ≥92°C), fisik disk (>60°C), dan lonjakan beban Synology DS923+",
+				Source:      "Synology NAS DS923+ (kp-load-guard.service)",
+				Target:      "120363404628369352@g.us",
+				TargetName:  "Grup KroomBox",
+				Endpoint:    "/notify",
+				Enabled:     true,
+				CreatedAt:   "2026-10-01 14:45",
+				LastUsed:    time.Now().Format("2006-01-02 15:04:05"),
+			},
+			{
+				ID:          "wh_kolabpanel_deploy",
+				Name:        "KolabPanel Deployment & Build Notifier",
+				Description: "Notifikasi otomatis saat proses deploy, SSL renew, atau build situs di server panel",
+				Source:      "KolabPanel Hosting Core",
+				Target:      "120363404628369352@g.us",
+				TargetName:  "Grup KroomBox",
+				Endpoint:    "/notify",
+				Enabled:     true,
+				CreatedAt:   "2026-10-01 14:00",
+				LastUsed:    "-",
 			},
 		},
 	}
@@ -138,6 +178,22 @@ func (m *Manager) load() error {
 		loaded.Customs = make([]CustomFeature, 0)
 	}
 
+	// Merge default webhooks if missing or empty
+	defaultWebhooks := DefaultConfig().Webhooks
+	if len(loaded.Webhooks) == 0 {
+		loaded.Webhooks = defaultWebhooks
+	} else {
+		whMap := make(map[string]bool)
+		for _, w := range loaded.Webhooks {
+			whMap[w.ID] = true
+		}
+		for _, defW := range defaultWebhooks {
+			if !whMap[defW.ID] {
+				loaded.Webhooks = append(loaded.Webhooks, defW)
+			}
+		}
+	}
+
 	m.config = loaded
 	return nil
 }
@@ -167,6 +223,8 @@ func (m *Manager) GetConfig() Config {
 	copy(copied.Builtins, m.config.Builtins)
 	copied.Customs = make([]CustomFeature, len(m.config.Customs))
 	copy(copied.Customs, m.config.Customs)
+	copied.Webhooks = make([]WebhookIntegration, len(m.config.Webhooks))
+	copy(copied.Webhooks, m.config.Webhooks)
 	return copied
 }
 
@@ -416,4 +474,138 @@ func (m *Manager) FormatMenuText() string {
 
 	sb.WriteString("\n_Ketik salah satu perintah atau kata kunci di atas untuk berinteraksi._")
 	return sb.String()
+}
+
+// ─── WEBHOOK INTEGRATIONS MANAGEMENT ──────────────────────────────────────────
+
+func (m *Manager) GetWebhooks() []WebhookIntegration {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	copied := make([]WebhookIntegration, len(m.config.Webhooks))
+	copy(copied, m.config.Webhooks)
+	return copied
+}
+
+func (m *Manager) AddWebhook(w WebhookIntegration) (WebhookIntegration, error) {
+	if strings.TrimSpace(w.Name) == "" {
+		return w, fmt.Errorf("nama webhook tidak boleh kosong")
+	}
+	if strings.TrimSpace(w.Target) == "" {
+		return w, fmt.Errorf("target WhatsApp tidak boleh kosong")
+	}
+
+	m.mu.Lock()
+	if w.ID == "" {
+		w.ID = fmt.Sprintf("wh_%d", time.Now().UnixNano())
+	}
+	if w.CreatedAt == "" {
+		w.CreatedAt = time.Now().Format("2006-01-02 15:04")
+	}
+	if w.Endpoint == "" {
+		w.Endpoint = "/notify"
+	}
+	if w.LastUsed == "" {
+		w.LastUsed = "-"
+	}
+
+	m.config.Webhooks = append(m.config.Webhooks, w)
+	m.mu.Unlock()
+
+	return w, m.save()
+}
+
+func (m *Manager) ToggleWebhook(id string, enabled bool) error {
+	m.mu.Lock()
+	found := false
+	for i := range m.config.Webhooks {
+		if m.config.Webhooks[i].ID == id {
+			m.config.Webhooks[i].Enabled = enabled
+			found = true
+			break
+		}
+	}
+	m.mu.Unlock()
+
+	if !found {
+		return fmt.Errorf("webhook integration '%s' not found", id)
+	}
+	return m.save()
+}
+
+func (m *Manager) UpdateWebhook(w WebhookIntegration) error {
+	m.mu.Lock()
+	found := false
+	for i := range m.config.Webhooks {
+		if m.config.Webhooks[i].ID == w.ID {
+			m.config.Webhooks[i].Name = w.Name
+			m.config.Webhooks[i].Description = w.Description
+			m.config.Webhooks[i].Source = w.Source
+			m.config.Webhooks[i].Target = w.Target
+			m.config.Webhooks[i].TargetName = w.TargetName
+			m.config.Webhooks[i].Endpoint = w.Endpoint
+			m.config.Webhooks[i].Enabled = w.Enabled
+			found = true
+			break
+		}
+	}
+	m.mu.Unlock()
+
+	if !found {
+		return fmt.Errorf("webhook integration '%s' not found", w.ID)
+	}
+	return m.save()
+}
+
+func (m *Manager) DeleteWebhook(id string) error {
+	m.mu.Lock()
+	idx := -1
+	for i := range m.config.Webhooks {
+		if m.config.Webhooks[i].ID == id {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		m.mu.Unlock()
+		return fmt.Errorf("webhook integration '%s' not found", id)
+	}
+	m.config.Webhooks = append(m.config.Webhooks[:idx], m.config.Webhooks[idx+1:]...)
+	m.mu.Unlock()
+	return m.save()
+}
+
+func (m *Manager) TouchWebhook(target string, source string) {
+	m.mu.Lock()
+	nowStr := time.Now().Format("2006-01-02 15:04:05")
+	changed := false
+	for i := range m.config.Webhooks {
+		w := &m.config.Webhooks[i]
+		cleanTarget := strings.TrimSpace(target)
+		cleanSource := strings.TrimSpace(source)
+
+		match := false
+		if cleanSource != "" {
+			if strings.EqualFold(w.ID, cleanSource) ||
+				strings.Contains(strings.ToLower(w.Name), strings.ToLower(cleanSource)) ||
+				strings.Contains(strings.ToLower(w.Source), strings.ToLower(cleanSource)) {
+				match = true
+			}
+		}
+		if !match && cleanTarget != "" {
+			if strings.EqualFold(strings.TrimSpace(w.Target), cleanTarget) ||
+				strings.HasPrefix(cleanTarget, strings.TrimSuffix(strings.TrimSpace(w.Target), "@s.whatsapp.net")) {
+				match = true
+			}
+		}
+
+		if match {
+			w.LastUsed = nowStr
+			changed = true
+		}
+	}
+	m.mu.Unlock()
+
+	if changed {
+		_ = m.save()
+	}
 }

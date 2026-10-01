@@ -23,12 +23,15 @@ func (publicCommand) OwnerOnlyMsg() string { return "" }
 func (publicCommand) AdminOnlyMsg() string { return "" }
 
 type AboutCommand struct{ publicCommand }
-type MenuCommand struct{ publicCommand }
+type MenuCommand struct {
+	publicCommand
+	MenuProvider func() string
+}
 type UptimeCommand struct{ publicCommand }
 type IDCommand struct{ publicCommand }
 
 func (AboutCommand) Name() string  { return ".about" }
-func (MenuCommand) Name() string   { return ".menu" }
+func (m MenuCommand) Name() string { return ".menu" }
 func (UptimeCommand) Name() string { return ".uptime" }
 func (IDCommand) Name() string     { return ".id" }
 
@@ -36,7 +39,10 @@ func (AboutCommand) Execute(ctx context.Context, client *whatsmeow.Client, msg *
 	return reply(ctx, client, msg, "GoWA\nWhatsApp webhook notification gateway.")
 }
 
-func (MenuCommand) Execute(ctx context.Context, client *whatsmeow.Client, msg *events.Message) error {
+func (m MenuCommand) Execute(ctx context.Context, client *whatsmeow.Client, msg *events.Message) error {
+	if m.MenuProvider != nil {
+		return reply(ctx, client, msg, m.MenuProvider())
+	}
 	return reply(ctx, client, msg, "Commands:\n.ping - check bot\n.about - bot info\n.uptime - bot runtime\n.id - show sender/chat JID\n.groups - list joined group JIDs\n.test - call localhost notifier")
 }
 

@@ -20,6 +20,7 @@ var uiHTML []byte
 type SendRequest struct {
 	To      string `json:"to"`
 	Message string `json:"message"`
+	Source  string `json:"source,omitempty"`
 }
 
 type Server struct {
@@ -66,6 +67,13 @@ func StartServer(ctx context.Context, mgr *WhatsAppManager, featMgr *features.Ma
 	mux.HandleFunc("/api/features/customs/toggle", srv.handleFeaturesCustomToggle)
 	mux.HandleFunc("/api/features/customs/delete", srv.handleFeaturesCustomDelete)
 	mux.HandleFunc("/api/features/customs/update", srv.handleFeaturesCustomUpdate)
+
+	// 6. Webhook Integrations Management Endpoints
+	mux.HandleFunc("/api/webhooks", srv.handleWebhooks)
+	mux.HandleFunc("/api/webhooks/toggle", srv.handleWebhooksToggle)
+	mux.HandleFunc("/api/webhooks/delete", srv.handleWebhooksDelete)
+	mux.HandleFunc("/api/webhooks/update", srv.handleWebhooksUpdate)
+	mux.HandleFunc("/api/webhooks/test", srv.handleWebhooksTest)
 
 	httpServer := &http.Server{
 		Addr:         addr,
@@ -252,6 +260,10 @@ func (s *Server) handleNotify(w http.ResponseWriter, r *http.Request) {
 			"error":   err.Error(),
 		})
 		return
+	}
+
+	if s.featureMgr != nil {
+		s.featureMgr.TouchWebhook(req.To, req.Source)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -458,6 +470,179 @@ func (s *Server) handleFeaturesCustomUpdate(w http.ResponseWriter, r *http.Reque
 
 	s.manager.AddLog("SYSTEM", "Features", fmt.Sprintf("Updated custom feature '%s' (%s)", req.Trigger, req.ID), "SUCCESS", "")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "feature": req})
+}
+
+// 6. Webhook Integrations Handlers
+
+func (s *Server) handleWebhooks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if s.featureMgr == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "feature manager not available"})
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		var req features.WebhookIntegration
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "invalid json: " + err.Error()})
+			return
+		}
+		created, err := s.featureMgr.AddWebhook(req)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+			return
+		}
+		s.manager.AddLog("SYSTEM", "Webhook", fmt.Sprintf("Added webhook integration '%s' (%s)", created.Name, created.Target), "SUCCESS", "")
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "webhook": created})
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(s.featureMgr.GetWebhooks())
+}
+
+func (s *Server) handleWebhooksToggle(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if s.featureMgr == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "feature manager not available"})
+		return
+	}
+
+	var req struct {
+		ID      string `json:"id"`
+		Enabled bool   `json:"enabled"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "invalid json"})
+		return
+	}
+
+	if err := s.featureMgr.ToggleWebhook(req.ID, req.Enabled); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+		return
+	}
+
+	s.manager.AddLog("SYSTEM", "Webhook", fmt.Sprintf("Webhook '%s' set to enabled=%v", req.ID, req.Enabled), "SUCCESS", "")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "id": req.ID, "enabled": req.Enabled})
+}
+
+func (s *Server) handleWebhooksDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && r.Method != http.MethodDelete {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if s.featureMgr == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "feature manager not available"})
+		return
+	}
+
+	var req struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "invalid json"})
+		return
+	}
+
+	if err := s.featureMgr.DeleteWebhook(req.ID); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+		return
+	}
+
+	s.manager.AddLog("SYSTEM", "Webhook", fmt.Sprintf("Deleted webhook integration '%s'", req.ID), "SUCCESS", "")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "id": req.ID})
+}
+
+func (s *Server) handleWebhooksUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && r.Method != http.MethodPut {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if s.featureMgr == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "feature manager not available"})
+		return
+	}
+
+	var req features.WebhookIntegration
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "invalid json"})
+		return
+	}
+
+	if err := s.featureMgr.UpdateWebhook(req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+		return
+	}
+
+	s.manager.AddLog("SYSTEM", "Webhook", fmt.Sprintf("Updated webhook '%s' (%s)", req.Name, req.ID), "SUCCESS", "")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "webhook": req})
+}
+
+func (s *Server) handleWebhooksTest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	var req struct {
+		ID     string `json:"id"`
+		Name   string `json:"name"`
+		Target string `json:"target"`
+		Source string `json:"source"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "invalid json: " + err.Error()})
+		return
+	}
+
+	if req.Target == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "target recipient is required"})
+		return
+	}
+
+	if req.Name == "" {
+		req.Name = "Webhook Integration Test"
+	}
+
+	testMsg := fmt.Sprintf("⚡ *[UJI COBA WEBHOOK — BOTVISTA]* ⚡\n\n📌 *Layanan:* %s\n📡 *Sumber:* %s\n🎯 *Target:* %s\n⏱️ *Waktu:* %s WIB\n\n✅ Jalur integrasi webhook WhatsApp Gateway berhasil terhubung dan aktif!",
+		req.Name, req.Source, req.Target, time.Now().Format("2006-01-02 15:04:05"))
+
+	if err := s.manager.SendNotify(r.Context(), req.Target, testMsg); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+		return
+	}
+
+	if s.featureMgr != nil {
+		s.featureMgr.TouchWebhook(req.Target, req.Name)
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("Test ping webhook berhasil dikirim ke %s", req.Target),
+		"time":    time.Now().Format("15:04:05"),
+	})
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
