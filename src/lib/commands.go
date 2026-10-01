@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/local/whatsmeow-base/commands/owner"
+	"github.com/local/whatsmeow-base/src/features"
 )
 
 const groupCacheTTL = 5 * time.Minute
@@ -26,10 +27,13 @@ type groupEntry struct {
 
 // CommandHandler routes incoming messages to registered commands.
 type CommandHandler struct {
-	ctx      context.Context
-	client   *whatsmeow.Client
-	ownerJID types.JID
-	commands map[string]owner.Command
+	ctx            context.Context
+	client         *whatsmeow.Client
+	clientProvider func() *whatsmeow.Client
+	logger         func(entryType, target, message, status, details string)
+	ownerJID       types.JID
+	commands       map[string]owner.Command
+	featureMgr     *features.Manager
 
 	cacheMu  sync.RWMutex
 	groupMap map[string]groupEntry // group JID string → cached info
@@ -44,6 +48,31 @@ func NewCommandHandler(ctx context.Context, client *whatsmeow.Client, ownerJID t
 		commands: make(map[string]owner.Command),
 		groupMap: make(map[string]groupEntry),
 	}
+}
+
+// SetClientProvider assigns a dynamic provider for the active whatsmeow client.
+func (h *CommandHandler) SetClientProvider(provider func() *whatsmeow.Client) {
+	h.clientProvider = provider
+}
+
+// SetLogger sets an optional activity logger callback (e.g. WhatsAppManager.AddLog).
+func (h *CommandHandler) SetLogger(logger func(entryType, target, message, status, details string)) {
+	h.logger = logger
+}
+
+// GetClient returns the current active whatsmeow client from provider if available, or static client.
+func (h *CommandHandler) GetClient() *whatsmeow.Client {
+	if h.clientProvider != nil {
+		if c := h.clientProvider(); c != nil {
+			return c
+		}
+	}
+	return h.client
+}
+
+// SetFeatureManager assigns a dynamic feature manager to the command handler.
+func (h *CommandHandler) SetFeatureManager(fm *features.Manager) {
+	h.featureMgr = fm
 }
 
 // Register adds a command to the handler and logs it to stdout.
@@ -83,7 +112,11 @@ func (h *CommandHandler) IsAdmin(msg *events.Message) bool {
 	}
 
 	// Fetch fresh group info.
-	info, err := h.client.GetGroupInfo(h.ctx, msg.Info.Chat)
+	cli := h.GetClient()
+	if cli == nil {
+		return false
+	}
+	info, err := cli.GetGroupInfo(h.ctx, msg.Info.Chat)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "get group info %s: %v\n", chatStr, err)
 		return false
@@ -117,32 +150,88 @@ func (h *CommandHandler) Handle(event any) {
 		return
 	}
 
-	cmd, ok := h.commands[strings.TrimSpace(strings.ToLower(text))]
-	if !ok {
+	cleanText := strings.TrimSpace(text)
+	lowerText := strings.ToLower(cleanText)
+
+	// 1. Check Feature Manager global switches
+	if h.featureMgr != nil {
+		cfg := h.featureMgr.GetConfig()
+		if !cfg.Settings.BotEnabled {
+			return
+		}
+		if msg.Info.IsGroup && !cfg.Settings.GroupResponse {
+			return
+		}
+		if !msg.Info.IsGroup && !cfg.Settings.PrivateResponse {
+			return
+		}
+	}
+
+	// 2. Check built-in commands
+	if cmd, ok := h.commands[lowerText]; ok {
+		if h.featureMgr != nil && !h.featureMgr.IsCommandEnabled(cmd.Name()) {
+			return
+		}
+
+		// Guard checks: owner bypasses all, then check individual gates.
+		isOwner := h.IsOwner(msg)
+		if cmd.OwnerOnly() && !isOwner {
+			h.reply(msg, guardMsg(cmd.OwnerOnlyMsg(), "❌ This command is for the owner only."))
+			return
+		}
+		if cmd.AdminOnly() && !isOwner && !h.IsAdmin(msg) {
+			h.reply(msg, guardMsg(cmd.AdminOnlyMsg(), "❌ This command is for group admins only."))
+			return
+		}
+
+		cli := h.GetClient()
+		if cli == nil {
+			fmt.Fprintf(os.Stderr, "command %s: client is not ready\n", cmd.Name())
+			return
+		}
+
+		fmt.Printf("[%s] %s: %s\n", msg.Info.Chat, SenderJID(msg.Info), text)
+		if err := cmd.Execute(h.ctx, cli, msg); err != nil {
+			fmt.Fprintf(os.Stderr, "command %s: %v\n", cmd.Name(), err)
+			if h.logger != nil {
+				h.logger("COMMAND", msg.Info.Chat.String(), cmd.Name(), "FAILED", err.Error())
+			}
+		} else {
+			if h.logger != nil {
+				h.logger("COMMAND", msg.Info.Chat.String(), cmd.Name(), "SUCCESS", "")
+			}
+		}
 		return
 	}
 
-	// Guard checks: owner bypasses all, then check individual gates.
-	isOwner := h.IsOwner(msg)
-	if cmd.OwnerOnly() && !isOwner {
-		h.reply(msg, guardMsg(cmd.OwnerOnlyMsg(), "❌ This command is for the owner only."))
-		return
-	}
-	if cmd.AdminOnly() && !isOwner && !h.IsAdmin(msg) {
-		h.reply(msg, guardMsg(cmd.AdminOnlyMsg(), "❌ This command is for group admins only."))
-		return
-	}
-
-	fmt.Printf("[%s] %s: %s\n", msg.Info.Chat, SenderJID(msg.Info), text)
-	if err := cmd.Execute(h.ctx, h.client, msg); err != nil {
-		fmt.Fprintf(os.Stderr, "command %s: %v\n", cmd.Name(), err)
+	// 3. Check custom auto-responders
+	if h.featureMgr != nil {
+		if matched := h.featureMgr.MatchCustom(cleanText, msg.Info.IsGroup); matched != nil {
+			sender := SenderJID(msg.Info).User
+			replyText := h.featureMgr.InterpolateResponse(matched.Response, sender, msg.Info.Chat.String())
+			h.reply(msg, replyText)
+			fmt.Printf("[AutoReply] Triggered '%s' for %s (%s)\n", matched.Trigger, sender, msg.Info.Chat)
+			return
+		}
 	}
 }
 
 func (h *CommandHandler) reply(msg *events.Message, text string) {
-	_, err := h.client.SendMessage(h.ctx, msg.Info.Chat, &waE2E.Message{Conversation: proto.String(text)})
+	cli := h.GetClient()
+	if cli == nil {
+		fmt.Fprintf(os.Stderr, "reply: client is not ready\n")
+		return
+	}
+	_, err := cli.SendMessage(h.ctx, msg.Info.Chat, &waE2E.Message{Conversation: proto.String(text)})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "reply: %v\n", err)
+		if h.logger != nil {
+			h.logger("BOT", msg.Info.Chat.String(), text, "FAILED", err.Error())
+		}
+	} else {
+		if h.logger != nil {
+			h.logger("BOT", msg.Info.Chat.String(), text, "SUCCESS", "")
+		}
 	}
 }
 
