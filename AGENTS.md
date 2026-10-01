@@ -54,8 +54,10 @@
     │   └── features.json       # State penyimpanan fitur & integrasi webhook live
     └── web/                    # Server dashboard Web UI & REST API manajemen
         ├── manager.go          # WhatsAppManager: koneksi, QR code emitter, event handling, in-memory logs
-        ├── server.go           # REST API HTTP mux, CORS, route /api/*, interceptor /notify
-        └── ui.html             # Dashboard interaktif Web UI (Glassmorphism design, auto-refresh)
+        ├── message_types.go    # Payload models (Media, Location, Contact, Status), media fetcher & waE2E builder
+        ├── schedule.go         # ScheduleManager: engine antrean pesan terjadwal, persistent JSON, background ticker
+        ├── server.go           # REST API HTTP mux, CORS, route /api/*, interceptor /notify, scheduler routes
+        └── ui.html             # Dashboard interaktif Web UI (Multi-format tabs, rich templates, scheduler queue)
 ```
 
 ---
@@ -89,6 +91,27 @@
   2. `wh_kolabpanel_deploy`: Notifikasi otomatis deployment, SSL renew, dan site build di server hosting KolabPanel. Target: `120363404628369352@g.us` (Grup KroomBox).
 - **Interseptor Otomatis `TouchWebhook`**:
   - Setiap request valid yang masuk ke `/notify`, server mengecek parameter `req.To` dan `req.Source`. Timestamp `LastUsed` pada registri webhook terkait otomatis diperbarui menjadi waktu live request tersebut.
+
+### 3.4 Rich Multi-Format Message Engine (`src/web/message_types.go`, `src/web/manager.go`)
+- Mendukung berbagai format pesan modern WhatsApp tanpa bloating pustaka eksternal:
+  1. **Teks Berformat**: Teks standar, Markdown WhatsApp (`*bold*`, `_italic_`, `~strike~`, ```monospace```), dan emoji.
+  2. **Media Berkas**: Gambar (`image/jpeg`, `image/png`, `image/webp`), Dokumen (`application/pdf`, `.zip`, `.xlsx`), Video (`video/mp4`), dan Audio (`audio/ogg`, voice notes).
+     - Input fleksibel: URL HTTP/HTTPS (auto-download dengan batas 50MB), Base64 data URI (`data:image/png;base64,...`), atau path berkas lokal server.
+     - Caption, nama berkas kustom (`file_name`), dan deteksi MIME otomatis.
+  3. **Lokasi GPS**: Kartu lokasi interaktif dengan koordinat Latitude, Longitude, nama venue/lokasi (`location_name`), dan alamat lengkap (`address`).
+  4. **Kontak vCard**: Kartu kontak bisnis/personal (`contact_name` dan `contact_phone`) standar vCard 3.0.
+  5. **Status Broadcast**: Publikasi status/story WhatsApp dengan mengirim ke JID `"status"` atau `"status@broadcast"`.
+
+### 3.5 Lightweight Scheduler Engine (`src/web/schedule.go`)
+- **Penyimpanan Terjadwal**: Tersimpan persisten di `src/session/schedules.json` (thread-safe dengan `sync.RWMutex`).
+- **Background Ticker**: Goroutine independen dengan interval cek 10 detik (`time.NewTicker(10 * time.Second)`).
+- **Siklus Hidup Tugas**:
+  - `PENDING`: Menunggu timestamp `due_timestamp` tercapai.
+  - `SENT`: Telah dikirim sukses ke WhatsApp target.
+  - `FAILED`: Gagal dikirim (mencatat pesan error di log dan UI).
+  - `CANCELLED`: Dibatalkan sebelum dikirim oleh pengguna.
+- **Toleransi Reboot**: Tugas `PENDING` yang tertinggal saat server reboot akan langsung diproses saat daemon menyala kembali jika waktu sudah terlewati.
+- **Aksi Antrean**: Menambah jadwal baru, eksekusi paksa instan (`ExecuteNow`), pembatalan (`Cancel`), dan pembersihan tugas (`Delete`).
 
 ---
 
@@ -139,7 +162,7 @@ Endpoint utama untuk aplikasi eksternal (KolabPanel, KP-Guard, script backend) m
 | `/api/reconnect` | `POST` | Memaksa koneksi ulang websocket ke server WhatsApp. |
 | `/api/groups` | `GET` | Mengambil daftar seluruh grup WhatsApp yang diikuti bot beserta nama dan JID `@g.us`. |
 | `/api/logs` | `GET` | Mengambil 100 log transaksi & aktivitas pesan terakhir dari memori server. |
-| `/api/send` | `POST` | Mengirim pesan langsung manual dari dashboard UI. Payload: `{"to": "...", "message": "..."}`. |
+| `/api/send` | `POST` | Mengirim pesan (teks, media, lokasi, vCard, status) atau menjadwalkan pengiriman jika `schedule_at` disertakan. Payload: `{"to": "...", "type": "text|image|document|video|audio|location|contact", "message": "...", ...}`. |
 
 ---
 
@@ -167,6 +190,18 @@ Endpoint utama untuk aplikasi eksternal (KolabPanel, KP-Guard, script backend) m
 | `/api/webhooks/update` | `POST` | Memperbarui nama, deskripsi, source, atau target webhook. |
 | `/api/webhooks/delete` | `POST` | Menghapus integrasi webhook dari registry (`{"id": "..."}`). |
 | `/api/webhooks/test` | `POST` | **Test Ping Instan**: Mengirim pesan uji koneksi ke target WhatsApp dan memperbarui `LastUsed`. Body: `{"id": "wh_kp_guard_nas", "name": "KP-Guard NAS", "target": "120363404628369352@g.us", "source": "Synology NAS DS923+"}`. |
+
+---
+
+### 4.5 Manajemen Antrean Pesan Terjadwal (Scheduler Queue)
+
+| Endpoint | Method | Fungsi & Payload |
+|---|---|---|
+| `/api/schedules` | `GET` | Mengambil seluruh antrean pesan terjadwal (Pending, Sent, Failed, Cancelled). |
+| `/api/schedules` | `POST` | Menjadwalkan pesan baru. Payload sama dengan `SendPayload` ditambah `schedule_at` (RFC3339). |
+| `/api/schedules/send-now` | `POST` | Memaksa pengiriman tugas terjadwal seketika tanpa menunggu waktu tiba. Body: `{"id": "sched_..."}`. |
+| `/api/schedules/cancel` | `POST` | Membatalkan jadwal pesan yang masih berstatus `PENDING`. Body: `{"id": "sched_..."}`. |
+| `/api/schedules/delete` | `POST` | Menghapus permanen riwayat jadwal dari `schedules.json`. Body: `{"id": "sched_..."}`. |
 
 ---
 

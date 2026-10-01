@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -17,16 +18,11 @@ import (
 //go:embed ui.html
 var uiHTML []byte
 
-type SendRequest struct {
-	To      string `json:"to"`
-	Message string `json:"message"`
-	Source  string `json:"source,omitempty"`
-}
-
 type Server struct {
 	addr       string
 	manager    *WhatsAppManager
 	featureMgr *features.Manager
+	schedMgr   *ScheduleManager
 	httpSrv    *http.Server
 }
 
@@ -35,11 +31,16 @@ func StartServer(ctx context.Context, mgr *WhatsAppManager, featMgr *features.Ma
 		addr = getListenAddr()
 	}
 
+	schedPath := filepath.Join("src", "session", "schedules.json")
+	schedMgr := NewScheduleManager(schedPath, mgr)
+	schedMgr.Start(ctx)
+
 	mux := http.NewServeMux()
 	srv := &Server{
 		addr:       addr,
 		manager:    mgr,
 		featureMgr: featMgr,
+		schedMgr:   schedMgr,
 	}
 
 	// 1. Web UI Dashboard
@@ -51,8 +52,12 @@ func StartServer(ctx context.Context, mgr *WhatsAppManager, featMgr *features.Ma
 	mux.HandleFunc("/api/logout", srv.handleLogout)
 	mux.HandleFunc("/api/reconnect", srv.handleReconnect)
 
-	// 3. Messenger & Tools
+	// 3. Messenger, Tools & Scheduling
 	mux.HandleFunc("/api/send", srv.handleSend)
+	mux.HandleFunc("/api/schedules", srv.handleSchedules)
+	mux.HandleFunc("/api/schedules/cancel", srv.handleScheduleCancel)
+	mux.HandleFunc("/api/schedules/send-now", srv.handleScheduleSendNow)
+	mux.HandleFunc("/api/schedules/delete", srv.handleScheduleDelete)
 	mux.HandleFunc("/api/groups", srv.handleGroups)
 	mux.HandleFunc("/api/logs", srv.handleLogs)
 
@@ -167,22 +172,77 @@ func (s *Server) handleReconnect(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "message": "reconnecting"})
 }
 
+func parseScheduleTime(val string) (time.Time, error) {
+	val = strings.TrimSpace(val)
+	formats := []string{
+		time.RFC3339,
+		"2006-01-02T15:04",
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04",
+		"2006-01-02T15:04:05",
+	}
+
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+	if loc == nil {
+		loc = time.Local
+	}
+
+	for _, f := range formats {
+		if t, err := time.ParseInLocation(f, val, loc); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("gunakan format YYYY-MM-DD HH:MM atau ISO8601")
+}
+
 func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var req SendRequest
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+	var req SendPayload
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 10<<20)).Decode(&req); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "invalid json"})
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "invalid json: " + err.Error()})
 		return
 	}
 
-	err := s.manager.SendMessage(r.Context(), req.To, req.Message)
 	w.Header().Set("Content-Type", "application/json")
+
+	// Check if schedule is requested
+	if strings.TrimSpace(req.ScheduleAt) != "" {
+		dueTime, err := parseScheduleTime(req.ScheduleAt)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"success": false,
+				"error":   "format jadwal tidak valid: " + err.Error(),
+			})
+			return
+		}
+
+		if !dueTime.Before(time.Now().Add(5 * time.Second)) {
+			task, err := s.schedMgr.Add(req, dueTime)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
+				return
+			}
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"success":      true,
+				"scheduled":    true,
+				"task_id":      task.ID,
+				"scheduled_at": task.ScheduledAt,
+				"message":      fmt.Sprintf("Pesan berhasil dijadwalkan untuk %s", task.ScheduledAt),
+			})
+			return
+		}
+	}
+
+	// Immediate send
+	err := s.manager.SendComplexMessage(r.Context(), req)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
@@ -191,8 +251,115 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
-		"message": fmt.Sprintf("Message sent to %s", req.To),
+		"message": fmt.Sprintf("Pesan berhasil dikirim ke %s", req.To),
 	})
+}
+
+func (s *Server) handleSchedules(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method == http.MethodGet {
+		list := s.schedMgr.List()
+		_ = json.NewEncoder(w).Encode(list)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		var req SendPayload
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 10<<20)).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "invalid json: " + err.Error()})
+			return
+		}
+		dueTime, err := parseScheduleTime(req.ScheduleAt)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
+			return
+		}
+		task, err := s.schedMgr.Add(req, dueTime)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"task":    task,
+			"message": "Pesan berhasil dijadwalkan",
+		})
+		return
+	}
+
+	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+}
+
+func (s *Server) handleScheduleCancel(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ID string `json:"id"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	w.Header().Set("Content-Type", "application/json")
+	if req.ID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "id is required"})
+		return
+	}
+	if err := s.schedMgr.Cancel(req.ID); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "message": "Jadwal berhasil dibatalkan"})
+}
+
+func (s *Server) handleScheduleSendNow(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ID string `json:"id"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	w.Header().Set("Content-Type", "application/json")
+	if req.ID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "id is required"})
+		return
+	}
+	if err := s.schedMgr.ExecuteNow(r.Context(), req.ID); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "message": "Pesan terjadwal berhasil dikirim sekarang"})
+}
+
+func (s *Server) handleScheduleDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		ID string `json:"id"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	w.Header().Set("Content-Type", "application/json")
+	if req.ID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": "id is required"})
+		return
+	}
+	if err := s.schedMgr.Delete(req.ID); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": false, "error": err.Error()})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "message": "Jadwal berhasil dihapus"})
 }
 
 func (s *Server) handleGroups(w http.ResponseWriter, r *http.Request) {

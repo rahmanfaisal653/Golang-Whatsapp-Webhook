@@ -680,35 +680,57 @@
       </div>
 
       <!-- ============================================== -->
-      <!-- TAB: KIRIM PESAN (MESSENGER TOOL)              -->
+      <!-- TAB: KIRIM PESAN & PENJADWALAN (MESSENGER HUB) -->
       <!-- ============================================== -->
       <div id="tab-content-send" class="tab-content space-y-6 hidden">
-        <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 card-shadow max-w-3xl mx-auto space-y-5">
-          <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        
+        <!-- Main Sender Card -->
+        <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 card-shadow max-w-4xl mx-auto space-y-6">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-5 border-b border-slate-100">
             <div>
               <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
                 <svg class="w-5 h-5 fill-[#25D366]" viewBox="0 0 24 24"><path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.477-.15-.678.15-.2.3-.778.98-.954 1.18-.175.2-.351.225-.652.075-.301-.15-1.27-.468-2.42-1.494-.895-.798-1.5-1.783-1.676-2.083-.175-.3-.019-.462.132-.612.136-.135.301-.35.452-.526.15-.175.2-.3.301-.5.101-.2.05-.375-.025-.525-.075-.15-.677-1.633-.928-2.238-.244-.59-.493-.51-.678-.52l-.578-.01c-.2 0-.526.075-.802.375-.276.3-1.053 1.03-1.053 2.511 0 1.482 1.079 2.912 1.229 3.113.15.2 2.124 3.242 5.145 4.547.719.31 1.28.497 1.718.636.722.23 1.378.197 1.898.12.578-.087 1.78-.727 2.03-1.43.25-.703.25-1.306.175-1.43-.075-.125-.276-.2-.577-.35zM12.04 2C6.52 2 2.04 6.48 2.04 12c0 1.89.52 3.65 1.43 5.17L2 22l4.98-1.43C8.42 21.43 10.18 22 12.04 22c5.52 0 10-4.48 10-10S17.56 2 12.04 2zm0 18.23c-1.61 0-3.11-.47-4.38-1.28l-.31-.2-2.96.85.86-2.88-.2-.32a8.18 8.18 0 0 1-1.26-4.4c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.69 8.23-8.23 8.23z"/></svg>
-                <span>WhatsApp Message Sender</span>
+                <span>WhatsApp Campaign & Messenger Hub</span>
               </h2>
-              <p class="text-xs text-slate-500 mt-0.5">Kirim pesan WhatsApp langsung ke nomor pribadi atau ke grup secara instan.</p>
+              <p class="text-xs text-slate-500 mt-1">Kirim pesan WhatsApp teks, media berkas, lokasi GPS, kartu vCard, atau jadwalkan pengiriman otomatis.</p>
             </div>
+            <button type="button" onclick="fetchSchedules()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span>Perbarui Antrean</span>
+            </button>
           </div>
 
-          <form id="form-send-message" onsubmit="handleSendMessage(event)" class="space-y-4">
-            <!-- Mode Buttons -->
-            <div class="flex gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold w-fit">
-              <button type="button" onclick="setRecipientMode('phone')" id="mode-btn-phone" class="px-3.5 py-1.5 rounded-lg bg-brand-600 text-white shadow-xs transition-all">Nomor Pribadi</button>
-              <button type="button" onclick="setRecipientMode('group')" id="mode-btn-group" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all">Grup WhatsApp</button>
+          <form id="form-send-message" onsubmit="handleSendMessage(event)" class="space-y-6">
+            <!-- 1. Recipient Target Mode -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Pilih Penerima</label>
+              <div class="flex flex-wrap gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold w-fit">
+                <button type="button" onclick="setRecipientMode('phone')" id="mode-btn-phone" class="px-4 py-2 rounded-lg bg-brand-600 text-white shadow-xs transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <span>Nomor Pribadi</span>
+                </button>
+                <button type="button" onclick="setRecipientMode('group')" id="mode-btn-group" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span>Grup WhatsApp</span>
+                </button>
+                <button type="button" onclick="setRecipientMode('status')" id="mode-btn-status" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                  <span>WhatsApp Status / Story</span>
+                </button>
+              </div>
             </div>
 
-            <!-- Target Phone -->
+            <!-- Target Phone Field -->
             <div id="field-phone">
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Telepon Tujuan</label>
               <input type="text" id="input-target-phone" placeholder="Contoh: 08123456789 atau 628123456789" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-sm font-mono transition-all" />
-              <p class="text-[11px] text-slate-400 mt-1">Format nomor lokal (08...) otomatis dinormalisasi ke awalan internasional (628...).</p>
+              <p class="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-brand-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>Format lokal <b>08...</b> otomatis dinormalisasi menjadi format internasional <b>628...</b>.</span>
+              </p>
             </div>
 
-            <!-- Target Group -->
+            <!-- Target Group Field -->
             <div id="field-group" class="hidden">
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Pilih Grup Tujuan</label>
               <select id="select-group" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-500 focus:bg-white text-sm font-mono transition-all">
@@ -716,38 +738,264 @@
               </select>
             </div>
 
-            <!-- Message Textarea -->
+            <!-- Target Status Banner -->
+            <div id="field-status-banner" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-start gap-3">
+              <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div>
+                <span class="font-bold">Mode Siaran WhatsApp Status (Story):</span>
+                <p class="mt-0.5 text-emerald-700">Pesan ini akan dipublikasikan ke status WhatsApp Anda dan dapat dilihat oleh seluruh kontak yang menyimpan nomor ini. Mendukung format teks maupun media gambar/video.</p>
+              </div>
+            </div>
+
+            <!-- 2. Message Format Selector (Tabs) -->
             <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Isi Pesan WhatsApp</label>
-                <div class="flex items-center gap-1.5 text-xs text-slate-500">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Pilih Format Konten</label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button type="button" onclick="setMessageType('text')" id="type-tab-text" class="px-3.5 py-2.5 rounded-xl border border-brand-500 bg-brand-50 text-brand-700 font-bold text-xs flex items-center justify-center gap-2 transition-all">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+                  <span>Teks Format</span>
+                </button>
+                <button type="button" onclick="setMessageType('media')" id="type-tab-media" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 font-semibold text-xs flex items-center justify-center gap-2 transition-all">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span>Media Berkas</span>
+                </button>
+                <button type="button" onclick="setMessageType('location')" id="type-tab-location" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 font-semibold text-xs flex items-center justify-center gap-2 transition-all">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>Lokasi GPS</span>
+                </button>
+                <button type="button" onclick="setMessageType('contact')" id="type-tab-contact" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 font-semibold text-xs flex items-center justify-center gap-2 transition-all">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span>Kontak vCard</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Section A: Teks Format -->
+            <div id="section-type-text" class="space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Isi Pesan Teks</label>
+                <!-- Rich Template Gallery Buttons -->
+                <div class="flex flex-wrap items-center gap-1.5">
                   <span class="text-[11px] text-slate-400 font-medium">Template:</span>
-                  <button type="button" onclick="insertTemplate('notif')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                  <button type="button" onclick="insertTemplate('notif')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
                     <svg class="w-3 h-3 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                     <span>Notifikasi</span>
                   </button>
-                  <button type="button" onclick="insertTemplate('alert')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                  <button type="button" onclick="insertTemplate('alert')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
                     <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     <span>Alert</span>
                   </button>
-                  <button type="button" onclick="insertTemplate('otp')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                  <button type="button" onclick="insertTemplate('otp')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
                     <svg class="w-3 h-3 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5M19 5l-2.5 2.5M9 11l-7 7v3h3l7-7m0 0a5 5 0 1 0-7-7 5 5 0 0 0 7 7z"/></svg>
                     <span>OTP</span>
                   </button>
+                  <button type="button" onclick="insertTemplate('invoice')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                    <svg class="w-3 h-3 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <span>Invoice</span>
+                  </button>
+                  <button type="button" onclick="insertTemplate('order')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all">
+                    <svg class="w-3 h-3 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span>Pesanan</span>
+                  </button>
                 </div>
               </div>
-              <textarea id="input-message" rows="5" placeholder="Tuliskan pesan WhatsApp di sini..." required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-sm transition-all"></textarea>
+
+              <textarea id="input-message" rows="5" placeholder="Tuliskan pesan WhatsApp di sini..." class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-sm transition-all"></textarea>
+              
+              <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-400">
+                <span>Tips Format: <b>*tebal*</b>, <i>_miring_</i>, <del>~coret~</del>, <code class="font-mono">```monospaced```</code></span>
+                <span id="char-counter">0 karakter</span>
+              </div>
             </div>
 
+            <!-- Section B: Media & Dokumen -->
+            <div id="section-type-media" class="space-y-4 hidden">
+              <!-- Sub-type selector -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Tipe Media</label>
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" onclick="setMediaSubtype('image')" id="media-sub-image" class="px-3 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-bold transition-all">Gambar (Image)</button>
+                  <button type="button" onclick="setMediaSubtype('document')" id="media-sub-document" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold transition-all">Dokumen / PDF</button>
+                  <button type="button" onclick="setMediaSubtype('video')" id="media-sub-video" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold transition-all">Video (MP4)</button>
+                  <button type="button" onclick="setMediaSubtype('audio')" id="media-sub-audio" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold transition-all">Audio / Voice Note</button>
+                </div>
+              </div>
+
+              <!-- Media Source Choice -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Upload File Box -->
+                <div class="p-4 rounded-xl border-2 border-dashed border-slate-200 hover:border-brand-400 bg-slate-50/50 flex flex-col items-center justify-center text-center transition-all cursor-pointer relative">
+                  <input type="file" id="input-media-file" onchange="handleFileSelected(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                  <svg class="w-8 h-8 text-slate-400 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div class="text-xs font-bold text-slate-700" id="file-select-label">Pilih atau Seret Berkas ke Sini</div>
+                  <div class="text-[11px] text-slate-400 mt-0.5" id="file-select-hint">Maksimal 50 MB</div>
+                </div>
+
+                <!-- Or Media URL -->
+                <div class="flex flex-col justify-center space-y-2">
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Atau Masukkan URL Media</label>
+                  <input type="url" id="input-media-url" placeholder="https://example.com/berkas.jpg" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-xs font-mono transition-all" />
+                  <p class="text-[11px] text-slate-400">Server akan otomatis mengunduh dan mengonversi media.</p>
+                </div>
+              </div>
+
+              <!-- Document Title Field -->
+              <div id="field-media-filename" class="hidden">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Dokumen (File Name)</label>
+                <input type="text" id="input-media-filename" placeholder="Contoh: Invoice_Order_102.pdf" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-xs font-mono transition-all" />
+              </div>
+
+              <!-- Media Caption -->
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Caption Media (Opsional)</label>
+                <textarea id="input-media-caption" rows="3" placeholder="Tuliskan keterangan / caption media..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-xs transition-all"></textarea>
+              </div>
+            </div>
+
+            <!-- Section C: Lokasi GPS -->
+            <div id="section-type-location" class="space-y-4 hidden">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Tempat / Venue</label>
+                  <input type="text" id="input-loc-name" placeholder="Contoh: Kantor Synology Hub Kroombox" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-xs transition-all" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Alamat Lengkap</label>
+                  <input type="text" id="input-loc-address" placeholder="Contoh: Jl. Sudirman Kav. 1, Jakarta" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-xs transition-all" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Latitude (Lintang)</label>
+                  <input type="number" step="any" id="input-loc-lat" placeholder="-6.2088" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-mono text-xs focus:outline-none focus:border-brand-500 focus:bg-white transition-all" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Longitude (Bujur)</label>
+                  <input type="number" step="any" id="input-loc-lon" placeholder="106.8456" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-mono text-xs focus:outline-none focus:border-brand-500 focus:bg-white transition-all" />
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="text-xs text-slate-400 font-medium">Preset Lokasi Cepat:</span>
+                <button type="button" onclick="applyLocationPreset('office')" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all">
+                  <svg class="w-3.5 h-3.5 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><top><line x1="9" y1="22" x2="9" y2="22.01"/></top><line x1="8" y1="6" x2="8.01" y2="6"/><line x1="16" y1="6" x2="16.01" y2="6"/><line x1="12" y1="6" x2="12.01" y2="6"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/></svg>
+                  <span>Kantor Synology Hub</span>
+                </button>
+                <button type="button" onclick="applyLocationPreset('monas')" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all">
+                  <svg class="w-3.5 h-3.5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l4 7-4 7-4-7 4-7z"/><circle cx="12" cy="18" r="3"/></svg>
+                  <span>Monas Jakarta</span>
+                </button>
+                <button type="button" onclick="fetchCurrentGPS()" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold transition-all">
+                  <svg class="w-3.5 h-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+                  <span>Deteksi GPS Browser</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Section D: Kontak vCard -->
+            <div id="section-type-contact" class="space-y-4 hidden">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Kontak (Display Name)</label>
+                  <input type="text" id="input-contact-name" placeholder="Contoh: Customer Support Kroombox" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white text-xs transition-all" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Telepon Kontak</label>
+                  <input type="text" id="input-contact-phone" placeholder="Contoh: 082218542122 atau 628..." class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-mono text-xs focus:outline-none focus:border-brand-500 focus:bg-white transition-all" />
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-400">Penerima dapat langsung menyimpan kontak ini ke buku telepon WhatsApp dengan sekali ketuk.</p>
+            </div>
+
+            <!-- 3. Scheduling Feature (Fitur Jadwal) -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Waktu Kirim</span>
+                </div>
+                <!-- Toggle Segment -->
+                <div class="flex p-0.5 bg-slate-200 rounded-lg text-xs font-bold">
+                  <button type="button" onclick="setScheduleMode(false)" id="sched-mode-now" class="px-3 py-1 rounded-md bg-white text-slate-900 shadow-xs transition-all">Kirim Sekarang</button>
+                  <button type="button" onclick="setScheduleMode(true)" id="sched-mode-later" class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all">Jadwalkan</button>
+                </div>
+              </div>
+
+              <!-- Schedule Input Container -->
+              <div id="schedule-inputs-box" class="space-y-3 hidden pt-2 border-t border-slate-200">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal & Waktu Eksekusi (WIB):</label>
+                    <input type="datetime-local" id="input-schedule-at" class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-800 font-mono text-xs focus:outline-none focus:border-brand-500" />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="block text-[11px] font-bold text-slate-600">Pilihan Cepat:</label>
+                    <div class="flex flex-wrap gap-1.5">
+                      <button type="button" onclick="applyQuickSchedule(15)" class="px-2 py-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-medium">+15 Menit</button>
+                      <button type="button" onclick="applyQuickSchedule(60)" class="px-2 py-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-medium">+1 Jam</button>
+                      <button type="button" onclick="applyQuickSchedule(180)" class="px-2 py-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-medium">+3 Jam</button>
+                      <button type="button" onclick="applyQuickScheduleTomorrow(8)" class="px-2 py-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-medium">Besok 08:00</button>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>Pesan akan disimpan di antrean server dan dikirim secara otomatis pada waktu yang ditentukan.</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Submit Buttons -->
             <div class="pt-2 flex items-center justify-end gap-3">
-              <button type="reset" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 transition-all">Reset</button>
+              <button type="reset" onclick="resetSendForm()" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 transition-all">Reset Form</button>
               <button type="submit" id="btn-submit-send" class="px-6 py-2.5 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-500/20 transition-all flex items-center gap-2">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                <span>Kirim Sekarang</span>
+                <span id="btn-submit-label">Kirim Sekarang</span>
               </button>
             </div>
           </form>
         </div>
+
+        <!-- 4. Scheduled Messages Queue Table -->
+        <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 card-shadow max-w-4xl mx-auto space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Antrean Pesan Terjadwal (Scheduled Queue)</h3>
+                <p class="text-[11px] text-slate-400">Pantau, picu sekarang, atau batalkan pesan yang sedang menunggu jadwal eksekusi.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="badge-schedule-count" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">0 Antrean</span>
+            </div>
+          </div>
+
+          <!-- Schedules Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                  <th class="py-2.5 px-3">Tujuan</th>
+                  <th class="py-2.5 px-3">Format</th>
+                  <th class="py-2.5 px-3">Konten / Ringkasan</th>
+                  <th class="py-2.5 px-3">Jadwal Kirim</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="schedule-table-body" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="6" class="py-6 text-center text-slate-400 text-xs">Memuat antrean pesan terjadwal...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============================================== -->
@@ -1384,43 +1632,234 @@
       if (tabId === 'beranda') {
         setTimeout(initCharts, 100);
       }
+      if (tabId === 'send') fetchSchedules();
       if (tabId === 'groups') fetchGroups();
       if (tabId === 'features') fetchFeatures();
       if (tabId === 'webhook') fetchWebhooks();
       if (tabId === 'logs') fetchLogs();
     }
 
+    let currentMsgType = 'text';
+    let currentMediaSubtype = 'image';
+    let isScheduleEnabled = false;
+    let selectedMediaBase64 = '';
+    let selectedMediaName = '';
+
+    function setMessageType(type) {
+      currentMsgType = type;
+      const tabs = ['text', 'media', 'location', 'contact'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('type-tab-' + t);
+        const sec = document.getElementById('section-type-' + t);
+        if (t === type) {
+          btn.className = 'px-3.5 py-2.5 rounded-xl border border-brand-500 bg-brand-50 text-brand-700 font-bold text-xs flex items-center justify-center gap-2 transition-all';
+          sec.classList.remove('hidden');
+        } else {
+          btn.className = 'px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 font-semibold text-xs flex items-center justify-center gap-2 transition-all';
+          sec.classList.add('hidden');
+        }
+      });
+    }
+
     function setRecipientMode(mode) {
       recipientMode = mode;
       const btnPhone = document.getElementById('mode-btn-phone');
       const btnGroup = document.getElementById('mode-btn-group');
+      const btnStatus = document.getElementById('mode-btn-status');
       const fieldPhone = document.getElementById('field-phone');
       const fieldGroup = document.getElementById('field-group');
+      const fieldStatus = document.getElementById('field-status-banner');
+
+      [btnPhone, btnGroup, btnStatus].forEach(b => {
+        b.className = 'px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition-all font-semibold flex items-center gap-1.5';
+      });
+      fieldPhone.classList.add('hidden');
+      fieldGroup.classList.add('hidden');
+      fieldStatus.classList.add('hidden');
 
       if (mode === 'phone') {
-        btnPhone.className = 'px-3.5 py-1.5 rounded-lg bg-brand-600 text-white shadow-xs font-bold transition-all';
-        btnGroup.className = 'px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all font-semibold';
+        btnPhone.className = 'px-4 py-2 rounded-lg bg-brand-600 text-white shadow-xs font-bold transition-all flex items-center gap-1.5';
         fieldPhone.classList.remove('hidden');
-        fieldGroup.classList.add('hidden');
-      } else {
-        btnGroup.className = 'px-3.5 py-1.5 rounded-lg bg-brand-600 text-white shadow-xs font-bold transition-all';
-        btnPhone.className = 'px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all font-semibold';
+      } else if (mode === 'group') {
+        btnGroup.className = 'px-4 py-2 rounded-lg bg-brand-600 text-white shadow-xs font-bold transition-all flex items-center gap-1.5';
         fieldGroup.classList.remove('hidden');
-        fieldPhone.classList.add('hidden');
         if (cachedGroups.length === 0) fetchGroups();
+      } else if (mode === 'status') {
+        btnStatus.className = 'px-4 py-2 rounded-lg bg-emerald-600 text-white shadow-xs font-bold transition-all flex items-center gap-1.5';
+        fieldStatus.classList.remove('hidden');
       }
+    }
+
+    function setMediaSubtype(sub) {
+      currentMediaSubtype = sub;
+      const subtypes = ['image', 'document', 'video', 'audio'];
+      subtypes.forEach(s => {
+        const btn = document.getElementById('media-sub-' + s);
+        if (s === sub) {
+          btn.className = 'px-3 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-bold transition-all';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold transition-all';
+        }
+      });
+
+      const fnField = document.getElementById('field-media-filename');
+      if (sub === 'document') {
+        fnField.classList.remove('hidden');
+      } else {
+        fnField.classList.add('hidden');
+      }
+    }
+
+    function handleFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      selectedMediaName = file.name;
+      document.getElementById('file-select-label').innerText = file.name;
+      document.getElementById('file-select-hint').innerText = (file.size / 1024 / 1024).toFixed(2) + ' MB • Siap diunggah';
+
+      if (currentMediaSubtype === 'document' && !document.getElementById('input-media-filename').value) {
+        document.getElementById('input-media-filename').value = file.name;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        selectedMediaBase64 = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setScheduleMode(enable) {
+      isScheduleEnabled = enable;
+      const box = document.getElementById('schedule-inputs-box');
+      const btnNow = document.getElementById('sched-mode-now');
+      const btnLater = document.getElementById('sched-mode-later');
+      const submitLabel = document.getElementById('btn-submit-label');
+
+      if (enable) {
+        btnLater.className = 'px-3 py-1 rounded-md bg-white text-slate-900 shadow-xs font-bold transition-all';
+        btnNow.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all';
+        box.classList.remove('hidden');
+        submitLabel.innerText = 'Jadwalkan Pengiriman';
+        if (!document.getElementById('input-schedule-at').value) {
+          applyQuickSchedule(15);
+        }
+      } else {
+        btnNow.className = 'px-3 py-1 rounded-md bg-white text-slate-900 shadow-xs font-bold transition-all';
+        btnLater.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all';
+        box.classList.add('hidden');
+        submitLabel.innerText = 'Kirim Sekarang';
+      }
+    }
+
+    function applyQuickSchedule(minutes) {
+      const d = new Date(Date.now() + minutes * 60 * 1000);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      document.getElementById('input-schedule-at').value = d.toISOString().slice(0, 16);
+    }
+
+    function applyQuickScheduleTomorrow(hour) {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      d.setHours(hour, 0, 0, 0);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      document.getElementById('input-schedule-at').value = d.toISOString().slice(0, 16);
+    }
+
+    function applyLocationPreset(preset) {
+      if (preset === 'office') {
+        document.getElementById('input-loc-name').value = 'Kantor Synology Hub Kroombox';
+        document.getElementById('input-loc-address').value = 'Gedung Kolab Tower Lt. 5, Jl. ZeroTier LAN 192.168.100.186';
+        document.getElementById('input-loc-lat').value = '-6.2088';
+        document.getElementById('input-loc-lon').value = '106.8456';
+      } else if (preset === 'monas') {
+        document.getElementById('input-loc-name').value = 'Monumen Nasional (Monas)';
+        document.getElementById('input-loc-address').value = 'Gambir, Kota Jakarta Pusat, DKI Jakarta';
+        document.getElementById('input-loc-lat').value = '-6.1754';
+        document.getElementById('input-loc-lon').value = '106.8272';
+      }
+    }
+
+    function fetchCurrentGPS() {
+      if (!navigator.geolocation) {
+        showToast('Browser tidak mendukung Geolocation', false);
+        return;
+      }
+      showToast('Mendeteksi koordinat GPS...', true);
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          document.getElementById('input-loc-lat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('input-loc-lon').value = pos.coords.longitude.toFixed(6);
+          if (!document.getElementById('input-loc-name').value) {
+            document.getElementById('input-loc-name').value = 'Lokasi Terdeteksi GPS';
+          }
+          showToast('Koordinat GPS berhasil diperoleh!', true);
+        },
+        err => {
+          showToast('Gagal memperoleh GPS: ' + err.message, false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
     }
 
     function insertTemplate(type) {
       const msg = document.getElementById('input-message');
+      const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
       if (type === 'notif') {
-        msg.value = '*[NOTIFIKASI SISTEM]*\n\nLayanan BotVista berhasil memproses tugas Anda.\nWaktu: ' + new Date().toLocaleTimeString('id-ID');
+        msg.value = '*[NOTIFIKASI SISTEM]*\n\n' +
+          'Halo Bapak/Ibu,\n' +
+          'Layanan BotVista telah berhasil memproses tugas sistem Anda.\n' +
+          'Waktu: ' + timeStr + ' WIB • ' + dateStr + '\n\n' +
+          'Status: *NORMAL & BERJALAN*';
       } else if (type === 'alert') {
-        msg.value = '*[PERINGATAN SISTEM]*\n\nTerdeteksi beban kerja tinggi atau event kritis pada server.\nHarap segera periksa dashboard operasional.';
+        msg.value = '*[PERINGATAN SISTEM — KRITIS]*\n\n' +
+          'Terdeteksi beban kerja tinggi atau event kritis pada server host.\n' +
+          'Waktu Kejadian: ' + timeStr + ' WIB\n' +
+          'Harap segera periksa dashboard operasional untuk mitigasi.';
       } else if (type === 'otp') {
         const randCode = Math.floor(100000 + Math.random() * 900000);
-        msg.value = '*[KODE VERIFIKASI OTP]*\n\nKode verifikasi Anda adalah: *' + randCode + '*\nJangan bagikan kode ini kepada siapa pun.';
+        msg.value = '*[KODE VERIFIKASI OTP]*\n\n' +
+          'Kode rahasia verifikasi Anda adalah: *' + randCode + '*\n' +
+          'Berlaku selama 5 menit. Jangan bagikan kode ini kepada pihak mana pun demi keamanan akun.';
+      } else if (type === 'invoice') {
+        const invNo = 'INV-' + Math.floor(10000 + Math.random() * 90000);
+        msg.value = '*[TAGIHAN & INVOICE PEMBAYARAN]*\n\n' +
+          'No. Invoice: *' + invNo + '*\n' +
+          'Layanan: Paket Web Hosting & Cloud Server Kroombox\n' +
+          'Total Tagihan: *Rp 250.000,-\n' +
+          'Jatuh Tempo: ' + dateStr + '\n\n' +
+          'Silakan lakukan pelunasan melalui portal klien atau transfer rekening resmi.';
+      } else if (type === 'order') {
+        const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+        msg.value = '*[KONFIRMASI PESANAN SELESAI]*\n\n' +
+          'Terima kasih telah berbelanja di layanan kami.\n' +
+          'ID Pesanan: *' + orderId + '*\n' +
+          'Status: *LUNAS & DIPROSES*\n' +
+          'Waktu: ' + timeStr + ' WIB\n\n' +
+          'Detail pelacakan dapat diakses secara berkala melalui tautan akun Anda.';
       }
+      updateCharCounter();
+    }
+
+    function updateCharCounter() {
+      const msg = document.getElementById('input-message');
+      const counter = document.getElementById('char-counter');
+      if (msg && counter) {
+        counter.innerText = msg.value.length + ' karakter';
+      }
+    }
+
+    function resetSendForm() {
+      selectedMediaBase64 = '';
+      selectedMediaName = '';
+      const label = document.getElementById('file-select-label');
+      const hint = document.getElementById('file-select-hint');
+      if (label) label.innerText = 'Pilih atau Seret Berkas ke Sini';
+      if (hint) hint.innerText = 'Maksimal 50 MB';
+      setScheduleMode(false);
+      updateCharCounter();
     }
 
     async function checkStatus() {
@@ -1535,41 +1974,243 @@
     async function handleSendMessage(e) {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-send');
+      const label = document.getElementById('btn-submit-label');
       let target = '';
 
       if (recipientMode === 'phone') {
         target = document.getElementById('input-target-phone').value.trim();
-      } else {
+        if (!target) {
+          showToast('Nomor telepon tujuan tidak boleh kosong', false);
+          return;
+        }
+      } else if (recipientMode === 'group') {
         target = document.getElementById('select-group').value.trim();
+        if (!target) {
+          showToast('Pilih salah satu grup tujuan', false);
+          return;
+        }
+      } else if (recipientMode === 'status') {
+        target = 'status@broadcast';
       }
 
-      const text = document.getElementById('input-message').value.trim();
-      if (!target || !text) {
-        showToast('Target dan pesan tidak boleh kosong', false);
-        return;
+      let payload = {
+        to: target,
+        type: currentMsgType
+      };
+
+      if (currentMsgType === 'text') {
+        const text = document.getElementById('input-message').value.trim();
+        if (!text) {
+          showToast('Isi pesan teks tidak boleh kosong', false);
+          return;
+        }
+        payload.message = text;
+      } else if (currentMsgType === 'media') {
+        payload.type = currentMediaSubtype;
+        const mediaUrl = document.getElementById('input-media-url').value.trim();
+        const caption = document.getElementById('input-media-caption').value.trim();
+        const filename = document.getElementById('input-media-filename').value.trim();
+
+        if (!selectedMediaBase64 && !mediaUrl) {
+          showToast('Pilih berkas media atau masukkan URL media', false);
+          return;
+        }
+
+        if (selectedMediaBase64) {
+          payload.media_data = selectedMediaBase64;
+          payload.file_name = selectedMediaName || filename;
+        } else {
+          payload.media_url = mediaUrl;
+          payload.file_name = filename;
+        }
+        payload.message = caption;
+      } else if (currentMsgType === 'location') {
+        const lat = parseFloat(document.getElementById('input-loc-lat').value);
+        const lon = parseFloat(document.getElementById('input-loc-lon').value);
+        if (isNaN(lat) || isNaN(lon)) {
+          showToast('Latitude dan Longitude harus diisi dengan angka valid', false);
+          return;
+        }
+        payload.latitude = lat;
+        payload.longitude = lon;
+        payload.location_name = document.getElementById('input-loc-name').value.trim();
+        payload.address = document.getElementById('input-loc-address').value.trim();
+      } else if (currentMsgType === 'contact') {
+        const cName = document.getElementById('input-contact-name').value.trim();
+        const cPhone = document.getElementById('input-contact-phone').value.trim();
+        if (!cName || !cPhone) {
+          showToast('Nama dan nomor kontak wajib diisi', false);
+          return;
+        }
+        payload.contact_name = cName;
+        payload.contact_phone = cPhone;
+      }
+
+      if (isScheduleEnabled) {
+        const schedTime = document.getElementById('input-schedule-at').value;
+        if (!schedTime) {
+          showToast('Pilih tanggal dan jam pengiriman jadwal', false);
+          return;
+        }
+        payload.schedule_at = schedTime;
       }
 
       btn.disabled = true;
-      btn.innerHTML = 'Mengirim...';
+      if (label) label.innerText = isScheduleEnabled ? 'Menjadwalkan...' : 'Mengirim...';
 
       try {
         const res = await fetch('/api/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: target, message: text })
+          body: JSON.stringify(payload)
         });
         const json = await res.json();
         if (res.ok && json.success) {
-          showToast('Pesan berhasil terkirim ke ' + target, true);
-          document.getElementById('input-message').value = '';
+          showToast(json.message || 'Pesan berhasil diproses!', true);
+          if (isScheduleEnabled) {
+            fetchSchedules();
+          } else {
+            document.getElementById('input-message').value = '';
+            const cap = document.getElementById('input-media-caption');
+            if (cap) cap.value = '';
+            updateCharCounter();
+          }
+        } else {
+          showToast(json.error || 'Gagal memproses pesan', false);
+        }
+      } catch (err) {
+        showToast('Error request: ' + err.message, false);
+      } finally {
+        btn.disabled = false;
+        if (label) label.innerText = isScheduleEnabled ? 'Jadwalkan Pengiriman' : 'Kirim Sekarang';
+      }
+    }
+
+    async function fetchSchedules() {
+      const tbody = document.getElementById('schedule-table-body');
+      const badge = document.getElementById('badge-schedule-count');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch('/api/schedules');
+        if (!res.ok) throw new Error('Status ' + res.status);
+        const list = await res.json();
+        if (badge) badge.innerText = (list ? list.length : 0) + ' Antrean';
+
+        if (!list || list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+            <svg class="w-8 h-8 mx-auto text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Belum ada pesan yang dijadwalkan.
+          </td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = list.map(t => {
+          let statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">PENDING</span>';
+          if (t.status === 'SENT') {
+            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">TERKIRIM</span>';
+          } else if (t.status === 'FAILED') {
+            statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700" title="${escapeHtml(t.error || '')}">GAGAL</span>`;
+          } else if (t.status === 'CANCELLED') {
+            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">DIBATALKAN</span>';
+          }
+
+          let typeBadge = `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px] uppercase font-mono">${escapeHtml(t.type || 'text')}</span>`;
+          let preview = escapeHtml(t.payload.message || t.payload.location_name || t.payload.file_name || t.payload.contact_name || '-');
+          if (preview.length > 40) preview = preview.slice(0, 37) + '...';
+
+          let actions = '';
+          if (t.status === 'PENDING') {
+            actions = `
+              <button onclick="forceSendSchedule('${t.id}')" title="Kirim Sekarang" class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+              <button onclick="cancelSchedule('${t.id}')" title="Batalkan Jadwal" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 transition-all">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </button>
+            `;
+          }
+          actions += `
+            <button onclick="deleteSchedule('${t.id}')" title="Hapus dari Riwayat" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-all">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          `;
+
+          return `
+            <tr class="hover:bg-slate-50/80 transition-all">
+              <td class="py-2.5 px-3 font-mono text-[11px] font-bold text-slate-800">${escapeHtml(t.to)}</td>
+              <td class="py-2.5 px-3">${typeBadge}</td>
+              <td class="py-2.5 px-3 text-slate-600">${preview}</td>
+              <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500">${escapeHtml(t.scheduled_at)}</td>
+              <td class="py-2.5 px-3">${statusBadge}</td>
+              <td class="py-2.5 px-3 text-right">
+                <div class="flex items-center justify-end gap-1.5">
+                  ${actions}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-rose-500 text-xs">Gagal memuat jadwal: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function cancelSchedule(id) {
+      try {
+        const res = await fetch('/api/schedules/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showToast('Jadwal berhasil dibatalkan', true);
+          fetchSchedules();
+        } else {
+          showToast(json.error || 'Gagal membatalkan jadwal', false);
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, false);
+      }
+    }
+
+    async function forceSendSchedule(id) {
+      try {
+        showToast('Mengirim pesan terjadwal sekarang...', true);
+        const res = await fetch('/api/schedules/send-now', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showToast('Pesan terjadwal berhasil dikirim!', true);
+          fetchSchedules();
         } else {
           showToast(json.error || 'Gagal mengirim pesan', false);
         }
       } catch (err) {
-        showToast('Error pengiriman: ' + err.message, false);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> <span>Kirim Sekarang</span>';
+        showToast('Error: ' + err.message, false);
+      }
+    }
+
+    async function deleteSchedule(id) {
+      try {
+        const res = await fetch('/api/schedules/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showToast('Jadwal berhasil dihapus', true);
+          fetchSchedules();
+        } else {
+          showToast(json.error || 'Gagal menghapus jadwal', false);
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, false);
       }
     }
 
@@ -2519,6 +3160,10 @@
     initCharts();
     fetchFeatures();
     fetchWebhooks();
+    fetchSchedules();
+
+    const inpMsg = document.getElementById('input-message');
+    if (inpMsg) inpMsg.addEventListener('input', updateCharCounter);
   </script>
 </body>
 </html>

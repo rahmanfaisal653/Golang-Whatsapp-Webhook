@@ -362,6 +362,56 @@ func (m *WhatsAppManager) SendMessageWithType(ctx context.Context, logType, targ
 	return nil
 }
 
+func (m *WhatsAppManager) SendComplexMessage(ctx context.Context, p SendPayload) error {
+	m.mu.RLock()
+	client := m.client
+	status := m.status
+	m.mu.RUnlock()
+
+	if client == nil || status != "CONNECTED" {
+		return fmt.Errorf("WhatsApp is not connected (current status: %s)", status)
+	}
+
+	target := strings.TrimSpace(p.To)
+	msgType := strings.ToLower(strings.TrimSpace(p.Type))
+	if msgType == "" {
+		msgType = "text"
+	}
+	if msgType == "status" {
+		target = "status@broadcast"
+	}
+	if target == "" {
+		return errors.New("recipient target cannot be empty")
+	}
+
+	jid, err := lib.ParseRecipientJID(target)
+	if err != nil {
+		m.AddLog(strings.ToUpper(msgType), target, p.Message, "FAILED", err.Error())
+		return err
+	}
+
+	msg, err := m.BuildMessage(ctx, p)
+	if err != nil {
+		m.AddLog(strings.ToUpper(msgType), target, p.Message, "FAILED", err.Error())
+		return err
+	}
+
+	_, sendErr := client.SendMessage(ctx, jid.ToNonAD(), msg)
+	if sendErr != nil {
+		m.AddLog(strings.ToUpper(msgType), jid.String(), p.Message, "FAILED", sendErr.Error())
+		return fmt.Errorf("send whatsapp (%s): %w", jid.String(), sendErr)
+	}
+
+	finalLogType := strings.ToUpper(msgType)
+	if jid.Server == "g.us" {
+		finalLogType = "GROUP_" + finalLogType
+	} else if jid.Server == "broadcast" {
+		finalLogType = "STATUS"
+	}
+	m.AddLog(finalLogType, jid.String(), p.Message, "SUCCESS", "")
+	return nil
+}
+
 func (m *WhatsAppManager) GetJoinedGroups(ctx context.Context) ([]GroupInfo, error) {
 	m.mu.RLock()
 	client := m.client

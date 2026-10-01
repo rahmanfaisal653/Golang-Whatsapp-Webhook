@@ -61,6 +61,10 @@ func ParseRecipientJID(target string) (types.JID, error) {
 		return types.JID{}, errors.New("recipient target cannot be empty")
 	}
 
+	if strings.EqualFold(trimmed, "status") || strings.EqualFold(trimmed, "status@broadcast") {
+		return types.StatusBroadcastJID, nil
+	}
+
 	// If already has an explicit server (e.g. contains '@')
 	if strings.Contains(trimmed, "@") {
 		jid, err := types.ParseJID(trimmed)
