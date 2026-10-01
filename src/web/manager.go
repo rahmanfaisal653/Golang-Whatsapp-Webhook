@@ -14,7 +14,6 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
-	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"google.golang.org/protobuf/proto"
@@ -22,6 +21,7 @@ import (
 	"rsc.io/qr"
 
 	"github.com/local/whatsmeow-base/src/features"
+	"github.com/local/whatsmeow-base/src/lib"
 )
 
 type LogEntry struct {
@@ -315,6 +315,14 @@ func (m *WhatsAppManager) Reconnect() error {
 }
 
 func (m *WhatsAppManager) SendMessage(ctx context.Context, target string, text string) error {
+	return m.SendMessageWithType(ctx, "DIRECT", target, text)
+}
+
+func (m *WhatsAppManager) SendNotify(ctx context.Context, target string, text string) error {
+	return m.SendMessageWithType(ctx, "NOTIFY", target, text)
+}
+
+func (m *WhatsAppManager) SendMessageWithType(ctx context.Context, logType, target, text string) error {
 	m.mu.RLock()
 	client := m.client
 	status := m.status
@@ -330,28 +338,10 @@ func (m *WhatsAppManager) SendMessage(ctx context.Context, target string, text s
 		return errors.New("recipient and message must not be empty")
 	}
 
-	var jid types.JID
-	var err error
-
-	if strings.Contains(cleanTarget, "@g.us") {
-		jid, err = types.ParseJID(cleanTarget)
-	} else if strings.Contains(cleanTarget, "@s.whatsapp.net") {
-		jid, err = types.ParseJID(cleanTarget)
-	} else {
-		num := cleanTarget
-		num = strings.ReplaceAll(num, "+", "")
-		num = strings.ReplaceAll(num, "-", "")
-		num = strings.ReplaceAll(num, " ", "")
-		num = strings.ReplaceAll(num, "(", "")
-		num = strings.ReplaceAll(num, ")", "")
-		if strings.HasPrefix(num, "0") {
-			num = "62" + num[1:]
-		}
-		jid, err = types.ParseJID(num + "@s.whatsapp.net")
-	}
-
-	if err != nil || jid.IsEmpty() {
-		return fmt.Errorf("invalid recipient JID: %s", cleanTarget)
+	jid, err := lib.ParseRecipientJID(cleanTarget)
+	if err != nil {
+		m.AddLog(logType, cleanTarget, cleanText, "FAILED", err.Error())
+		return err
 	}
 
 	msg := &waE2E.Message{
@@ -360,15 +350,15 @@ func (m *WhatsAppManager) SendMessage(ctx context.Context, target string, text s
 
 	_, sendErr := client.SendMessage(ctx, jid.ToNonAD(), msg)
 	if sendErr != nil {
-		m.AddLog("DIRECT", cleanTarget, cleanText, "FAILED", sendErr.Error())
-		return sendErr
+		m.AddLog(logType, jid.String(), cleanText, "FAILED", sendErr.Error())
+		return fmt.Errorf("send whatsapp (%s): %w", jid.String(), sendErr)
 	}
 
-	logType := "DIRECT"
+	finalLogType := logType
 	if jid.Server == "g.us" {
-		logType = "GROUP"
+		finalLogType = "GROUP"
 	}
-	m.AddLog(logType, cleanTarget, cleanText, "SUCCESS", "")
+	m.AddLog(finalLogType, jid.String(), cleanText, "SUCCESS", "")
 	return nil
 }
 

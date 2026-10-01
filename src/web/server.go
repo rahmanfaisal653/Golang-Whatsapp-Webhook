@@ -11,10 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"go.mau.fi/whatsmeow/proto/waE2E"
-	"go.mau.fi/whatsmeow/types"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/local/whatsmeow-base/src/features"
 )
 
@@ -216,38 +212,57 @@ func (s *Server) handleNotify(w http.ResponseWriter, r *http.Request) {
 
 	if s.featureMgr != nil && !s.featureMgr.IsWebhookEnabled() {
 		s.manager.AddLog("NOTIFY", "-", "Request rejected: Webhook is disabled", "FAILED", "Webhook disabled in settings")
-		http.Error(w, "Webhook notifier is disabled in feature settings", http.StatusServiceUnavailable)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Webhook notifier is disabled in feature settings",
+		})
 		return
 	}
 
 	var req SendRequest
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "invalid json: " + err.Error(),
+		})
 		return
 	}
 
-	jid, err := types.ParseJID(req.To)
-	if err != nil || jid.IsEmpty() || req.Message == "" {
-		http.Error(w, "invalid notify request", http.StatusBadRequest)
+	req.To = strings.TrimSpace(req.To)
+	req.Message = strings.TrimSpace(req.Message)
+	if req.To == "" || req.Message == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "recipient 'to' and 'message' are required and cannot be empty",
+		})
 		return
 	}
 
-	client := s.manager.GetClient()
-	if client == nil {
-		http.Error(w, "whatsapp client not ready", http.StatusServiceUnavailable)
+	if err := s.manager.SendNotify(r.Context(), req.To, req.Message); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	if _, err := client.SendMessage(r.Context(), jid.ToNonAD(), &waE2E.Message{Conversation: proto.String(req.Message)}); err != nil {
-		s.manager.AddLog("NOTIFY", req.To, req.Message, "FAILED", err.Error())
-		http.Error(w, fmt.Sprintf("send whatsapp: %v", err), http.StatusBadGateway)
-		return
-	}
-
-	s.manager.AddLog("NOTIFY", req.To, req.Message, "SUCCESS", "")
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = fmt.Fprint(w, "notify applied")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"status":  "DELIVERED",
+		"message": "notify applied",
+		"to":      req.To,
+		"time":    time.Now().Format("15:04:05"),
+	})
 }
 
 // 5. Feature Management Handlers

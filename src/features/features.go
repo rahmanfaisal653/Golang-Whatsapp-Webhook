@@ -11,11 +11,12 @@ import (
 )
 
 type GlobalSettings struct {
-	BotEnabled      bool `json:"bot_enabled"`
-	WebhookEnabled  bool `json:"webhook_enabled"`
-	GroupResponse   bool `json:"group_response"`
-	PrivateResponse bool `json:"private_response"`
-	AutoReconnect   bool `json:"auto_reconnect"`
+	BotEnabled         bool   `json:"bot_enabled"`
+	WebhookEnabled     bool   `json:"webhook_enabled"`
+	OutgoingWebhookURL string `json:"outgoing_webhook_url"`
+	GroupResponse      bool   `json:"group_response"`
+	PrivateResponse    bool   `json:"private_response"`
+	AutoReconnect      bool   `json:"auto_reconnect"`
 }
 
 type BuiltinCommand struct {

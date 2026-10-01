@@ -1,8 +1,11 @@
 package lib
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
@@ -213,6 +216,48 @@ func (h *CommandHandler) Handle(event any) {
 			fmt.Printf("[AutoReply] Triggered '%s' for %s (%s)\n", matched.Trigger, sender, msg.Info.Chat)
 			return
 		}
+	}
+
+	// 4. Outgoing Webhook Event Forwarding
+	if h.featureMgr != nil {
+		cfg := h.featureMgr.GetConfig()
+		if cfg.Settings.WebhookEnabled && cfg.Settings.OutgoingWebhookURL != "" {
+			go h.forwardToWebhook(cfg.Settings.OutgoingWebhookURL, msg, text)
+		}
+	}
+}
+
+func (h *CommandHandler) forwardToWebhook(webhookURL string, msg *events.Message, text string) {
+	sender := SenderJID(msg.Info)
+	payload := map[string]interface{}{
+		"event":      "message",
+		"sender":     sender.User,
+		"sender_jid": sender.String(),
+		"chat":       msg.Info.Chat.String(),
+		"is_group":   msg.Info.IsGroup,
+		"push_name":  msg.Info.PushName,
+		"message":    text,
+		"timestamp":  time.Now().Unix(),
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+
+	client := &http.Client{Timeout: 6 * time.Second}
+	resp, err := client.Post(webhookURL, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[WebhookForwarder] Error sending to %s: %v\n", webhookURL, err)
+		if h.logger != nil {
+			h.logger("WEBHOOK", webhookURL, text, "FAILED", err.Error())
+		}
+		return
+	}
+	defer resp.Body.Close()
+
+	if h.logger != nil {
+		h.logger("WEBHOOK", webhookURL, text, "SUCCESS", fmt.Sprintf("HTTP %d", resp.StatusCode))
 	}
 }
 
