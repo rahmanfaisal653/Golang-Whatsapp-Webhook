@@ -110,7 +110,10 @@ func (s *server) handleKeyCreate(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Label string `json:"label"`
 	}
-	_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body)
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
 	plain, k, err := createKey(strings.TrimSpace(body.Label))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -128,8 +131,8 @@ func (s *server) handleKeyDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) handleSend(w http.ResponseWriter, r *http.Request) {
-	var req notify.Request
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+	req, err := decodeRequest(w, r)
+	if err != nil {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
@@ -145,8 +148,8 @@ func (s *server) handleNotify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	var req notify.Request
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+	req, err := decodeRequest(w, r)
+	if err != nil {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
@@ -155,6 +158,13 @@ func (s *server) handleNotify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, "notify applied")
+}
+
+// decodeRequest reads the /notify JSON body shared by handleSend and handleNotify.
+func decodeRequest(w http.ResponseWriter, r *http.Request) (notify.Request, error) {
+	var req notify.Request
+	err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req)
+	return req, err
 }
 
 // apiKeyFrom reads the caller key from X-API-Key or an Authorization Bearer.

@@ -1,24 +1,19 @@
-
 # Webhook notifier Whatsapp
 
 Minimal WhatsApp notifier using Go + whatsmeow.
 
-Purpose:
-
 ```text
-WhatsApp bot runs locally/server-side
-local HTTP API receives notify requests
-bot sends message to WhatsApp private/group chat
+WhatsApp bot runs on a server
+apps POST to /notify
+bot sends the message to a WhatsApp private/group chat
 ```
-
-No config system. No build step. Just a tiny notifier with an embedded dashboard.
 
 ## Features
 
 - WhatsApp QR login / saved session
-- **Web UI**: public docs page (`/`) and admin dashboard (`/admin`)
-- **Admin dashboard**: live status, QR login in the browser, API key management, send-test form
-- Authenticated notifier API: `POST /notify` (requires an API key)
+- Embedded dashboard (login required): live status, QR login, API key management, send-test form
+- Public docs at `/docs` explaining how to use the webhook
+- Authenticated notifier API: `POST /notify` (requires an `X-API-Key`)
 - Utility commands: `.ping`, `.about`, `.menu`, `.uptime`, `.id`, `.groups`, `.test`
 
 ## Project structure
@@ -26,106 +21,57 @@ No config system. No build step. Just a tiny notifier with an embedded dashboard
 ```text
 main.go                    app boot, WA connect, command registration
 src/app/app.go             WhatsApp client wrapper + UI-facing state (QR, status)
-src/web/server.go          HTTP server: docs, admin, /notify
-src/web/handlers.go        HTTP handlers + /notify endpoint
+src/web/server.go          HTTP server: dashboard, docs, /notify
+src/web/handlers.go        HTTP handlers
 src/web/auth.go            admin login session + API key store
-src/web/docs.go            renders README/docs as HTML for the docs page
+src/web/docs.go            renders docs/*.md as HTML
 src/web/static/            embedded dashboard UI (app.html, style.css, icon.svg)
-src/lib/commands.go         WhatsApp command router
-src/lib/jid.go              shared JID helpers
+src/lib/                   WhatsApp command router + JID helpers
 commands/owner/*.go        .ping .about .menu .uptime .id .groups .test
-src/session/                WhatsApp session DB + API keys, ignored by git
+docs/usage.md              docs shown at /docs
+src/session/               WhatsApp session DB + API keys, ignored by git
 ```
 
 ## Run
 
 ```bash
-# Admin login for the dashboard (if unset, a random password is printed on start)
+export ADMIN_EMAIL='admin@gmail.com'          # dashboard login email
 export ADMIN_PASSWORD='choose-a-strong-password'
-# Optional: bind address (default 127.0.0.1:18080)
-export LISTEN_ADDR='127.0.0.1:18080'
+export LISTEN_ADDR='127.0.0.1:18080'          # optional, this is the default
 go run .
 ```
 
 Then open:
 
 ```text
-http://127.0.0.1:18080/         dashboard (login required)
-http://127.0.0.1:18080/docs     public docs
+http://127.0.0.1:18080/        dashboard (login required)
+http://127.0.0.1:18080/docs    public docs
 ```
 
-On the admin page, if the bot is not linked yet a QR appears. Scan it from
-WhatsApp:
+If the bot is not linked yet, the dashboard shows a QR. Scan it from
+WhatsApp → Linked devices → Link a device. The session is saved in
+`src/session/whatsmeow.db`.
+
+## Notify API
 
 ```text
-WhatsApp → Linked devices → Link a device
-```
-
-After login, session is saved in:
-
-```text
-src/session/whatsmeow.db
-```
-
-## Local notifier API
-
-Server:
-
-```text
-https://kroomhook.kroombox.com/notify
-```
-
-Method:
-
-```text
-POST
-```
-
-Headers:
-
-```text
+POST https://kroomhook.kroombox.com/notify
 Content-Type: application/json
-X-API-Key: <key created on the admin dashboard>
+X-API-Key: YOUR_API_KEY
 ```
-
-Body:
 
 ```json
 {
-  "to": "120363xxxxx@g.us",
-  "message": "notify applied"
+  "to": "628123456789@s.whatsapp.net",
+  "message": "Hello from my app"
 }
 ```
 
-Response on success:
+`to` is a private number (`<number>@s.whatsapp.net`) or a group ID
+(`<group-id>@g.us`). On success the response is `notify applied`.
 
-```text
-notify applied
-```
-
-### curl example
-
-```bash
-curl -X POST https://kroomhook.kroombox.com/notify \
-  -H 'Content-Type: application/json' \
-  -H 'X-API-Key: YOUR_KEY' \
-  -d '{"to":"120363xxxxx@g.us","message":"notify applied"}'
-```
-
-### Postman example
-
-```text
-Method: POST
-URL: https://kroomhook.kroombox.com/notify
-Headers:
-  Content-Type: application/json
-  X-API-Key: YOUR_KEY
-Body → raw → JSON:
-{
-  "to": "120363xxxxx@g.us",
-  "message": "notify applied"
-}
-```
+See `docs/usage.md` (also at `/docs`) for full examples in curl, JavaScript,
+PHP, Go and Postman.
 
 ## WhatsApp commands
 
@@ -135,81 +81,22 @@ Body → raw → JSON:
 .menu    command list
 .uptime  bot runtime
 .id      show sender/chat JID
-.groups  list joined WhatsApp groups + group JID
-.test    send "notify applied" to the current chat (proves the send path)
-```
-
-## Getting target JID
-
-Private chat:
-
-```text
-.id
-```
-
-Use:
-
-```text
-Sender: 628xxx@s.whatsapp.net
-```
-
-Group:
-
-```text
-.groups
-```
-
-Use group JID:
-
-```text
-120363xxxxx@g.us
-```
-
-Bot must be inside target group.
-
-## How `.test` works
-
-User sends:
-
-```text
-.test
-```
-
-Flow:
-
-```text
-.test command
-→ notify.Send() with the current chat JID
-→ notifier sends "notify applied" back to that chat
-```
-
-This proves:
-
-```text
-WA command router works
-send path works
-notifier can send a WA message
-```
-
-## More docs
-
-```text
-docs/getting-started.md   overview — how to use the webhook
-docs/integration.md       integration examples (curl, JS, PHP, Go, Postman)
-docs/notifier.md          API reference
+.groups  list joined groups + group JID
+.test    send "notify applied" to the current chat
 ```
 
 ## Verification
 
 ```bash
 gofmt -w .
+go vet ./...
 go test ./...
 go build ./...
 ```
 
 ## Security notes
 
-- `src/session/` contains WhatsApp credentials and API keys. Do not commit/share it.
+- `src/session/` contains WhatsApp credentials and API keys. Do not commit or share it.
 - The server binds to `127.0.0.1` by default; expose it only behind a proxy/tunnel.
-- `/notify` requires an `X-API-Key`; the dashboard requires the admin password.
+- `/notify` requires an `X-API-Key`; the dashboard requires the admin login.
 - This uses an unofficial WhatsApp library; avoid spammy sending.

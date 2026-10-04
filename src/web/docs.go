@@ -6,15 +6,13 @@ import (
 	"os"
 )
 
-// docs maps the pages shown in the public docs UI to files in the repo.
+// docs is the single page shown in the docs view, loaded from the repo.
 var docs = []struct {
 	Slug  string
 	Title string
 	File  string
 }{
-	{"overview", "Overview", "docs/getting-started.md"},
-	{"integration", "Integration Guide", "docs/integration.md"},
-	{"notifier", "API Reference", "docs/notifier.md"},
+	{"usage", "How to use", "docs/usage.md"},
 }
 
 func (s *server) handleDocsList(w http.ResponseWriter, r *http.Request) {
