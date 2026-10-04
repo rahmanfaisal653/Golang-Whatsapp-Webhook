@@ -10,6 +10,15 @@ POST http://127.0.0.1:18080/notify
 
 ## Request
 
+Headers:
+
+```text
+Content-Type: application/json
+X-API-Key: <key created on the admin dashboard>
+```
+
+Body:
+
 ```json
 {
   "to": "120363xxxxx@g.us",
@@ -43,6 +52,7 @@ Errors:
 
 ```text
 405 method not allowed
+401 unauthorized (missing/invalid X-API-Key)
 400 invalid json
 400 invalid notify request
 502 send whatsapp: ...
@@ -53,6 +63,7 @@ Errors:
 ```bash
 curl -X POST http://127.0.0.1:18080/notify \
   -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_KEY' \
   -d '{"to":"120363xxxxx@g.us","message":"notify applied"}'
 ```
 
@@ -63,6 +74,7 @@ Method: POST
 URL: http://127.0.0.1:18080/notify
 Headers:
   Content-Type: application/json
+  X-API-Key: YOUR_KEY
 Body:
   raw → JSON
 ```
@@ -93,5 +105,6 @@ notify applied
 ## Notes
 
 - API is local-only: `127.0.0.1`.
+- Every request needs a valid `X-API-Key` (create keys on the admin dashboard).
 - Bot must be connected to WhatsApp.
 - Bot must be inside target group before sending to group JID.

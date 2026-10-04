@@ -16,31 +16,46 @@ No config system. No dashboard. No public webhook framework. Just a tiny notifie
 ## Features
 
 - WhatsApp QR login / saved session
-- Local notifier API: `POST /notify`
-- WA command `.test` calls local API and sends test notification
-- Utility commands: `.ping`, `.about`, `.menu`, `.uptime`, `.id`, `.groups`
+- **Web UI**: public docs page (`/`) and admin dashboard (`/admin`)
+- **Admin dashboard**: live status, QR login in the browser, API key management, send-test form
+- Authenticated notifier API: `POST /notify` (requires an API key)
+- Utility commands: `.ping`, `.about`, `.menu`, `.uptime`, `.id`, `.groups`, `.test`
 
 ## Project structure
 
 ```text
 main.go                    app boot, WA connect, command registration
-src/notify/listen.go        local HTTP notifier server
+src/app/app.go             WhatsApp client wrapper + UI-facing state (QR, status)
+src/web/server.go          HTTP server: docs, admin, /notify
+src/web/handlers.go        HTTP handlers + /notify endpoint
+src/web/auth.go            admin login session + API key store
+src/web/docs.go            renders README/docs as HTML for the docs page
+src/web/static/            embedded HTML (index.html, admin.html)
 src/lib/commands.go         WhatsApp command router
 src/lib/jid.go              shared JID helpers
-commands/owner/ping.go      .ping command
-commands/owner/basic.go     .about .menu .uptime .id
-commands/owner/groups.go    .groups command
-commands/owner/test.go      .test command → POST localhost /notify
-src/session/                WhatsApp session DB, ignored by git
+commands/owner/*.go        .ping .about .menu .uptime .id .groups .test
+src/session/                WhatsApp session DB + API keys, ignored by git
 ```
 
 ## Run
 
 ```bash
+# Admin login for the dashboard (if unset, a random password is printed on start)
+export ADMIN_PASSWORD='choose-a-strong-password'
+# Optional: bind address (default 127.0.0.1:18080)
+export LISTEN_ADDR='127.0.0.1:18080'
 go run .
 ```
 
-First run prints QR. Scan from WhatsApp:
+Then open:
+
+```text
+http://127.0.0.1:18080/         public docs
+http://127.0.0.1:18080/admin    admin dashboard (login with ADMIN_PASSWORD)
+```
+
+On the admin page, if the bot is not linked yet a QR appears. Scan it from
+WhatsApp:
 
 ```text
 WhatsApp → Linked devices → Link a device
@@ -66,10 +81,11 @@ Method:
 POST
 ```
 
-Header:
+Headers:
 
 ```text
 Content-Type: application/json
+X-API-Key: <key created on the admin dashboard>
 ```
 
 Body:
@@ -92,6 +108,7 @@ notify applied
 ```bash
 curl -X POST https://kroomhook.kroombox.com/notify \
   -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_KEY' \
   -d '{"to":"120363xxxxx@g.us","message":"notify applied"}'
 ```
 
@@ -102,6 +119,7 @@ Method: POST
 URL: https://kroomhook.kroombox.com/notify
 Headers:
   Content-Type: application/json
+  X-API-Key: YOUR_KEY
 Body → raw → JSON:
 {
   "to": "120363xxxxx@g.us",
@@ -118,7 +136,7 @@ Body → raw → JSON:
 .uptime  bot runtime
 .id      show sender/chat JID
 .groups  list joined WhatsApp groups + group JID
-.test    call localhost /notify and send "notify applied" to current chat
+.test    send "notify applied" to the current chat (proves the send path)
 ```
 
 ## Getting target JID
@@ -161,8 +179,7 @@ Flow:
 
 ```text
 .test command
-→ POST https://kroomhook.kroombox.com/notify
-→ body uses current chat JID
+→ notify.Send() with the current chat JID
 → notifier sends "notify applied" back to that chat
 ```
 
@@ -170,8 +187,8 @@ This proves:
 
 ```text
 WA command router works
-local API works
-notifier can send WA message
+send path works
+notifier can send a WA message
 ```
 
 ## More docs
@@ -184,15 +201,14 @@ docs/integration.md   beginner integration guide
 ## Verification
 
 ```bash
-gofmt -w main.go commands/owner/*.go src/notify/*.go
+gofmt -w .
 go test ./...
 go build ./...
 ```
 
 ## Security notes
 
-- `src/session/` contains WhatsApp credentials. Do not commit/share it.
-- Notifier binds to `127.0.0.1`, local machine only.
-- Do not expose `/notify` publicly without adding auth.
+- `src/session/` contains WhatsApp credentials and API keys. Do not commit/share it.
+- The server binds to `127.0.0.1` by default; expose it only behind a proxy/tunnel.
+- `/notify` requires an `X-API-Key`; the dashboard requires the admin password.
 - This uses an unofficial WhatsApp library; avoid spammy sending.
-# Golang-Whatsapp-Webhook

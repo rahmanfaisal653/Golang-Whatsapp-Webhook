@@ -2,24 +2,23 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 
-	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
-	_ "go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	_ "modernc.org/sqlite"
 
 	"github.com/local/whatsmeow-base/commands/owner"
+	"github.com/local/whatsmeow-base/src/app"
 	"github.com/local/whatsmeow-base/src/lib"
-	"github.com/local/whatsmeow-base/src/notify"
+	"github.com/local/whatsmeow-base/src/web"
 )
 
 func main() {
@@ -27,8 +26,10 @@ func main() {
 	client, cleanup := newClient(ctx)
 	defer cleanup()
 
+	application := app.New(client)
+
 	if len(os.Args) > 1 && os.Args[1] == "--list-groups" {
-		if err := connect(ctx, client); err != nil {
+		if err := application.Connect(ctx); err != nil {
 			fatal("connect", err)
 		}
 		defer client.Disconnect()
@@ -38,10 +39,14 @@ func main() {
 		return
 	}
 
-	go notify.Start(ctx, client)
+	// Clear the stale QR in the UI if WhatsApp logs this device out.
+	client.AddEventHandler(func(evt any) {
+		if _, ok := evt.(*events.LoggedOut); ok {
+			application.SetQR("")
+		}
+	})
 
-	ownerJID := parseOwnerJID()
-	handler := lib.NewCommandHandler(ctx, client, ownerJID)
+	handler := lib.NewCommandHandler(ctx, client, parseOwnerJID())
 	for _, cmd := range []owner.Command{
 		owner.PingCommand{},
 		owner.AboutCommand{},
@@ -56,15 +61,24 @@ func main() {
 	handler.LogSummary()
 	client.AddEventHandler(handler.Handle)
 
-	if err := connect(ctx, client); err != nil {
-		fatal("connect", err)
-	}
-	defer client.Disconnect()
+	// Pair (first run) or reconnect (saved session) in the background so the
+	// web server starts immediately and can show the QR when needed.
+	go func() {
+		if err := application.Connect(ctx); err != nil {
+			fmt.Fprintf(os.Stderr, "connect: %v\n", err)
+		}
+	}()
+	go func() {
+		if err := web.Start(ctx, application); err != nil {
+			fmt.Fprintf(os.Stderr, "web: %v\n", err)
+		}
+	}()
 
-	fmt.Println("Connected. Press CTRL+C to stop.")
+	fmt.Println("Running. Admin dashboard: http://" + web.Addr() + "/admin  (CTRL+C to stop)")
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
+	client.Disconnect()
 }
 
 func newClient(ctx context.Context) (*whatsmeow.Client, func()) {
@@ -92,36 +106,6 @@ func listGroups(ctx context.Context, client *whatsmeow.Client) error {
 		fmt.Printf("%s\n%s\n\n", group.Name, group.JID)
 	}
 	return nil
-}
-
-func connect(ctx context.Context, client *whatsmeow.Client) error {
-	if client.Store.ID != nil {
-		return client.Connect()
-	}
-
-	qr, err := client.GetQRChannel(ctx)
-	if err != nil {
-		return fmt.Errorf("open QR channel: %w", err)
-	}
-	if err := client.Connect(); err != nil {
-		return err
-	}
-
-	for event := range qr {
-		switch event.Event {
-		case "code":
-			fmt.Println("Scan this QR in WhatsApp > Linked devices:")
-			qrterminal.GenerateHalfBlock(event.Code, qrterminal.L, os.Stdout)
-		case "success":
-			return nil
-		default:
-			if event.Error != nil {
-				return event.Error
-			}
-			return fmt.Errorf("WhatsApp login ended: %s", event.Event)
-		}
-	}
-	return errors.New("WhatsApp QR channel closed")
 }
 
 func sqliteURI(path string) string {

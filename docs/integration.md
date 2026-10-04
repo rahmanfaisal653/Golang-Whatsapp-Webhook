@@ -18,6 +18,7 @@ Headers:
 
 ```text
 Content-Type: application/json
+X-API-Key: <key created on the admin dashboard>
 ```
 
 Body:
@@ -81,6 +82,7 @@ Headers:
 
 ```text
 Content-Type: application/json
+X-API-Key: <key created on the admin dashboard>
 ```
 
 Body → raw → JSON:
@@ -103,6 +105,7 @@ notify applied
 ```bash
 curl -X POST https://kroomhook.kroombox.com/notify \
   -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_KEY' \
   -d '{"to":"120363xxxxx@g.us","message":"Hello from curl"}'
 ```
 
@@ -111,7 +114,7 @@ curl -X POST https://kroomhook.kroombox.com/notify \
 ```js
 const res = await fetch("https://kroomhook.kroombox.com/notify", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: { "Content-Type": "application/json", "X-API-Key": process.env.GOWA_API_KEY },
   body: JSON.stringify({
     to: "120363xxxxx@g.us",
     message: "Hello from Node"
@@ -129,7 +132,7 @@ app.post("/tickets", async (req, res) => {
 
   await fetch("https://kroomhook.kroombox.com/notify", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-API-Key": process.env.GOWA_API_KEY },
     body: JSON.stringify({
       to: "120363xxxxx@g.us",
       message: `🎫 New Ticket
@@ -156,7 +159,7 @@ $payload = json_encode([
 $ch = curl_init("https://kroomhook.kroombox.com/notify");
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
-    CURLOPT_HTTPHEADER => ["Content-Type: application/json"],
+    CURLOPT_HTTPHEADER => ["Content-Type: application/json", "X-API-Key: " . getenv("GOWA_API_KEY")],
     CURLOPT_POSTFIELDS => $payload,
     CURLOPT_RETURNTRANSFER => true,
 ]);
@@ -177,6 +180,7 @@ import (
     "encoding/json"
     "fmt"
     "net/http"
+    "os"
 )
 
 func main() {
@@ -185,7 +189,11 @@ func main() {
         "message": "Hello from Go",
     })
 
-    res, err := http.Post("https://kroomhook.kroombox.com/notify", "application/json", bytes.NewReader(payload))
+    req, _ := http.NewRequest("POST", "https://kroomhook.kroombox.com/notify", bytes.NewReader(payload))
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("X-API-Key", os.Getenv("GOWA_API_KEY"))
+
+    res, err := http.DefaultClient.Do(req)
     if err != nil {
         panic(err)
     }
@@ -261,10 +269,11 @@ copy exact JID
 
 ## Security note
 
-Current public endpoint has no auth.
+The endpoint requires an `X-API-Key` header.
 
 ```text
-Anyone who knows the URL can send WhatsApp messages through the bot.
+Anyone with a valid API key can send WhatsApp messages through the bot.
 ```
 
-Use only for trusted testing. Add auth before serious/public use.
+Create and revoke keys on the admin dashboard. Add rate limiting before
+serious/public use.
