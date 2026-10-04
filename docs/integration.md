@@ -1,14 +1,27 @@
 # Integration Guide
 
-Use GoWA when another app needs to send WhatsApp notifications.
+This guide shows how to send WhatsApp messages from your application through
+this webhook. Pick the example for your language, replace `YOUR_API_KEY` with
+your real key and adjust the target and message.
 
-```text
-your app → POST https://kroomhook.kroombox.com/notify → GoWA → WhatsApp message
-```
+## Before you start
 
-Your app does not connect to WhatsApp directly. It only sends JSON to the GoWA endpoint.
+You need:
 
-## Public endpoint
+- An **API key** — create one on the dashboard (**API keys → Create key**).
+- A **target** — a phone number (private chat) or a group ID (group chat).
+
+## Target format
+
+| Target | What to use | Example |
+|---|---|---|
+| Private chat | phone number, international format (no `+`, no spaces) | `628123456789` |
+| Group chat | group ID ending in `@g.us` | `120363000000000000@g.us` |
+
+Private numbers are sent to `<number>@s.whatsapp.net`. For groups, the bot must
+already be a member of the group.
+
+## Endpoint
 
 ```text
 POST https://kroomhook.kroombox.com/notify
@@ -18,14 +31,14 @@ Headers:
 
 ```text
 Content-Type: application/json
-X-API-Key: <key created on the admin dashboard>
+X-API-Key: YOUR_API_KEY
 ```
 
 Body:
 
 ```json
 {
-  "to": "120363xxxxx@g.us",
+  "to": "628123456789@s.whatsapp.net",
   "message": "Hello from my app"
 }
 ```
@@ -36,95 +49,43 @@ Success response:
 notify applied
 ```
 
-## Get target JID
-
-Private chat:
-
-```text
-send .id to bot
-```
-
-Use:
-
-```text
-Sender: 628xxx@s.whatsapp.net
-```
-
-Group chat:
-
-```text
-send .groups to bot
-```
-
-Use:
-
-```text
-120363xxxxx@g.us
-```
-
-The bot must already be inside that group.
-
-## Postman test
-
-Method:
-
-```text
-POST
-```
-
-URL:
-
-```text
-https://kroomhook.kroombox.com/notify
-```
-
-Headers:
-
-```text
-Content-Type: application/json
-X-API-Key: <key created on the admin dashboard>
-```
-
-Body → raw → JSON:
-
-```json
-{
-  "to": "120363xxxxx@g.us",
-  "message": "Hello from Postman"
-}
-```
-
-Expected:
-
-```text
-notify applied
-```
-
-## curl example
+## curl
 
 ```bash
 curl -X POST https://kroomhook.kroombox.com/notify \
   -H 'Content-Type: application/json' \
-  -H 'X-API-Key: YOUR_KEY' \
-  -d '{"to":"120363xxxxx@g.us","message":"Hello from curl"}'
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"to":"628123456789@s.whatsapp.net","message":"Hello from curl"}'
 ```
 
-## JavaScript / Node example
+Send to a group:
+
+```bash
+curl -X POST https://kroomhook.kroombox.com/notify \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: YOUR_API_KEY' \
+  -d '{"to":"120363000000000000@g.us","message":"Hello group"}'
+```
+
+## JavaScript / Node
 
 ```js
 const res = await fetch("https://kroomhook.kroombox.com/notify", {
   method: "POST",
-  headers: { "Content-Type": "application/json", "X-API-Key": process.env.GOWA_API_KEY },
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": process.env.WEBHOOK_API_KEY
+  },
   body: JSON.stringify({
-    to: "120363xxxxx@g.us",
+    to: "628123456789@s.whatsapp.net",
     message: "Hello from Node"
   })
 });
 
-console.log(await res.text());
+console.log(await res.text()); // notify applied
 ```
 
-Ticket form example:
+Real-world example — notify on a new ticket:
 
 ```js
 app.post("/tickets", async (req, res) => {
@@ -132,14 +93,13 @@ app.post("/tickets", async (req, res) => {
 
   await fetch("https://kroomhook.kroombox.com/notify", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-API-Key": process.env.GOWA_API_KEY },
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": process.env.WEBHOOK_API_KEY
+    },
     body: JSON.stringify({
-      to: "120363xxxxx@g.us",
-      message: `🎫 New Ticket
-Name: ${name}
-Email: ${email}
-Subject: ${subject}
-Message: ${message}`
+      to: "628123456789@s.whatsapp.net",
+      message: `🎫 New Ticket\nName: ${name}\nEmail: ${email}\nSubject: ${subject}\nMessage: ${message}`
     })
   });
 
@@ -147,19 +107,22 @@ Message: ${message}`
 });
 ```
 
-## PHP example
+## PHP
 
 ```php
 <?php
 $payload = json_encode([
-    "to" => "120363xxxxx@g.us",
+    "to" => "628123456789@s.whatsapp.net",
     "message" => "Hello from PHP"
 ]);
 
 $ch = curl_init("https://kroomhook.kroombox.com/notify");
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
-    CURLOPT_HTTPHEADER => ["Content-Type: application/json", "X-API-Key: " . getenv("GOWA_API_KEY")],
+    CURLOPT_HTTPHEADER => [
+        "Content-Type: application/json",
+        "X-API-Key: " . getenv("WEBHOOK_API_KEY")
+    ],
     CURLOPT_POSTFIELDS => $payload,
     CURLOPT_RETURNTRANSFER => true,
 ]);
@@ -167,10 +130,10 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 curl_close($ch);
 
-echo $response;
+echo $response; // notify applied
 ```
 
-## Go example
+## Go
 
 ```go
 package main
@@ -185,13 +148,13 @@ import (
 
 func main() {
     payload, _ := json.Marshal(map[string]string{
-        "to": "120363xxxxx@g.us",
+        "to":      "628123456789@s.whatsapp.net",
         "message": "Hello from Go",
     })
 
     req, _ := http.NewRequest("POST", "https://kroomhook.kroombox.com/notify", bytes.NewReader(payload))
     req.Header.Set("Content-Type", "application/json")
-    req.Header.Set("X-API-Key", os.Getenv("GOWA_API_KEY"))
+    req.Header.Set("X-API-Key", os.Getenv("WEBHOOK_API_KEY"))
 
     res, err := http.DefaultClient.Do(req)
     if err != nil {
@@ -199,81 +162,40 @@ func main() {
     }
     defer res.Body.Close()
 
-    fmt.Println(res.Status)
+    fmt.Println(res.Status) // 200 OK
 }
 ```
 
-## Common errors
+## Postman
 
-### File not found
-
-Cause:
-
-```text
-request reached web server, but not GoWA /notify route
-```
-
-Usually:
-
-```text
-subdomain points to wrong server
-Nginx vhost not loaded
-HTTPS config handled by another server block
-wrong endpoint URL
-```
-
-Fix:
-
-```text
-check Cloudflare DNS target
-check Nginx server_name
-check /notify proxy config
-reload Nginx
-```
-
-### Invalid notify request
-
-Cause:
-
-```text
-missing to
-missing message
-bad JID format
-```
-
-Correct body:
+1. Method: `POST`
+2. URL: `https://kroomhook.kroombox.com/notify`
+3. Headers:
+   - `Content-Type: application/json`
+   - `X-API-Key: YOUR_API_KEY`
+4. Body → raw → JSON:
 
 ```json
 {
-  "to": "120363xxxxx@g.us",
-  "message": "Hello"
+  "to": "628123456789@s.whatsapp.net",
+  "message": "Hello from Postman"
 }
 ```
 
-### send whatsapp: failed to get group members
+Expected response: `notify applied`
 
-Cause:
+## Common errors
 
-```text
-wrong group JID
-bot is not inside the group
-```
+| Response | Meaning | Fix |
+|---|---|---|
+| `401 unauthorized` | missing or wrong API key | check the `X-API-Key` header |
+| `400 invalid json` | body is not valid JSON | validate the JSON body |
+| `400 invalid notify request` | `to` or `message` is missing/empty | include both fields |
+| `502 send whatsapp: ...` | the bot could not deliver | check the target format, and that the bot is in the group |
 
-Fix:
+## Tips
 
-```text
-invite bot to group
-send .groups
-copy exact JID
-```
-
-## Security note
-
-The endpoint requires an `X-API-Key` header.
-
-```text
-Anyone with a valid API key can send WhatsApp messages through the bot.
-```
-
-Create and revoke keys on the admin dashboard. Add rate limiting before
-serious/public use.
+- Keep your API key secret — anyone with a valid key can send messages through
+  the bot. Store it in an environment variable, never in client-side code.
+- Revoke a leaked key on the dashboard and create a new one.
+- Do not send messages in a loop; WhatsApp may rate-limit or block the number.

@@ -11,7 +11,7 @@ local HTTP API receives notify requests
 bot sends message to WhatsApp private/group chat
 ```
 
-No config system. No dashboard. No public webhook framework. Just a tiny notifier.
+No config system. No build step. Just a tiny notifier with an embedded dashboard.
 
 ## Features
 
@@ -30,7 +30,7 @@ src/web/server.go          HTTP server: docs, admin, /notify
 src/web/handlers.go        HTTP handlers + /notify endpoint
 src/web/auth.go            admin login session + API key store
 src/web/docs.go            renders README/docs as HTML for the docs page
-src/web/static/            embedded HTML (index.html, admin.html)
+src/web/static/            embedded dashboard UI (app.html, style.css, icon.svg)
 src/lib/commands.go         WhatsApp command router
 src/lib/jid.go              shared JID helpers
 commands/owner/*.go        .ping .about .menu .uptime .id .groups .test
@@ -50,8 +50,8 @@ go run .
 Then open:
 
 ```text
-http://127.0.0.1:18080/         public docs
-http://127.0.0.1:18080/admin    admin dashboard (login with ADMIN_PASSWORD)
+http://127.0.0.1:18080/         dashboard (login required)
+http://127.0.0.1:18080/docs     public docs
 ```
 
 On the admin page, if the bot is not linked yet a QR appears. Scan it from
@@ -194,8 +194,9 @@ notifier can send a WA message
 ## More docs
 
 ```text
-docs/notifier.md      API reference
-docs/integration.md   beginner integration guide
+docs/getting-started.md   overview — how to use the webhook
+docs/integration.md       integration examples (curl, JS, PHP, Go, Postman)
+docs/notifier.md          API reference
 ```
 
 ## Verification

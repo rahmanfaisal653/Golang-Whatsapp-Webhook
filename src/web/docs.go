@@ -12,7 +12,7 @@ var docs = []struct {
 	Title string
 	File  string
 }{
-	{"readme", "Overview", "README.md"},
+	{"overview", "Overview", "docs/getting-started.md"},
 	{"integration", "Integration Guide", "docs/integration.md"},
 	{"notifier", "API Reference", "docs/notifier.md"},
 }

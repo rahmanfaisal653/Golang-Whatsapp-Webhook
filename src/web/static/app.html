@@ -89,14 +89,20 @@
           <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></div>
           <div style="flex:1"><h2>Send test message</h2><p class="hint" style="margin:0">Deliver a message through the bot to verify the send path.</p></div>
         </div>
-        <label for="to">Target JID</label>
-        <input id="to" placeholder="628xxx@s.whatsapp.net or 120363xxxx@g.us">
+        <label for="targetType">Chat type</label>
+        <select id="targetType" onchange="onTargetTypeChange()">
+          <option value="private">Private chat</option>
+          <option value="group">Group chat</option>
+        </select>
+        <label for="to" id="toLabel">Phone number</label>
+        <input id="to" placeholder="628123456789">
         <label for="msg">Message</label>
         <textarea id="msg" rows="3" placeholder="message"></textarea>
         <div class="row" style="margin-top:6px">
           <button class="btn" onclick="sendTest()">Send</button>
           <span id="sendRes" class="mut"></span>
         </div>
+        <p class="hint" id="toHint" style="margin:10px 0 0">Enter the number in international format, e.g. <code class="inline">628123456789</code>. We add <code class="inline">@s.whatsapp.net</code> automatically.</p>
       </div>
     </section>
 
@@ -233,12 +239,28 @@ async function createKey() {
   $('label').value = '';
   loadKeys();
 }
+function onTargetTypeChange() {
+  const group = $('targetType').value === 'group';
+  $('toLabel').textContent = group ? 'Group ID' : 'Phone number';
+  $('to').placeholder = group ? '120363000000000000' : '628123456789';
+  $('toHint').innerHTML = group
+    ? 'Enter the group ID (the number before <code class="inline">@g.us</code>), e.g. <code class="inline">120363000000000000</code>. The bot must already be in the group.'
+    : 'Enter the number in international format, e.g. <code class="inline">628123456789</code>. We add <code class="inline">@s.whatsapp.net</code> automatically.';
+}
+function buildJID() {
+  const raw = $('to').value.trim();
+  if (raw.includes('@')) return raw; // already a full JID
+  const id = raw.replace(/[^0-9]/g, '');
+  return id + ($('targetType').value === 'group' ? '@g.us' : '@s.whatsapp.net');
+}
 async function sendTest() {
+  const to = buildJID();
+  if (!to || to.startsWith('@')) { $('sendRes').textContent = 'Enter a target first.'; return; }
   $('sendRes').textContent = 'Sending…';
   const r = await fetch('/api/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ to: $('to').value, message: $('msg').value })
+    body: JSON.stringify({ to: to, message: $('msg').value })
   });
   $('sendRes').textContent = r.ok ? 'Sent ✓' : ('Failed: ' + await r.text());
 }
@@ -247,6 +269,7 @@ function escapeHtml(s) {
 }
 
 /* ---------- Boot ---------- */
+onTargetTypeChange();
 (async () => {
   await initDocs();
   const r = await fetch('/api/status');
