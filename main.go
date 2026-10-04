@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -39,10 +40,13 @@ func main() {
 		return
 	}
 
-	// Clear the stale QR in the UI if WhatsApp logs this device out.
+	// If WhatsApp unlinks this device (from the phone or via the dashboard),
+	// the current client is dead: whatsmeow deletes its store and refuses to
+	// reconnect. Ask main to exit so the supervisor (PM2) restarts a fresh
+	// process, which creates a new device and shows a new QR to pair again.
 	client.AddEventHandler(func(evt any) {
 		if _, ok := evt.(*events.LoggedOut); ok {
-			application.SetQR("")
+			application.MarkLoggedOut()
 		}
 	})
 
@@ -77,8 +81,18 @@ func main() {
 	fmt.Println("Running. Admin dashboard: http://" + web.Addr() + "/admin  (CTRL+C to stop)")
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
-	client.Disconnect()
+	select {
+	case <-stop:
+		client.Disconnect()
+	case <-application.Restart():
+		// Device was unlinked. Exit cleanly so PM2 restarts a fresh process
+		// that can pair a new device (the current client can no longer connect).
+		fmt.Println("WhatsApp device unlinked — restarting to allow re-pairing.")
+		client.Disconnect()
+		// Give the triggering HTTP response a moment to reach the browser
+		// before the process exits.
+		time.Sleep(time.Second)
+	}
 }
 
 func newClient(ctx context.Context) (*whatsmeow.Client, func()) {

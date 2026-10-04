@@ -45,6 +45,16 @@ func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// handleLogoutWhatsApp unlinks the WhatsApp device (not the admin session).
+// The process then restarts so a new QR is shown for re-pairing.
+func (s *server) handleLogoutWhatsApp(w http.ResponseWriter, r *http.Request) {
+	if err := s.app.Logout(r.Context()); err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]any{
 		"state":  s.app.State(),

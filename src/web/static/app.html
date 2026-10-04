@@ -59,6 +59,7 @@
         <div class="card-head">
           <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div>
           <div style="flex:1"><h2>Connection</h2><p class="hint" style="margin:0">Live status of the WhatsApp session.</p></div>
+          <button class="btn danger" id="unlinkBtn" onclick="logoutWhatsApp()" hidden>Unlink</button>
         </div>
         <div id="status" class="mut">…</div>
       </div>
@@ -69,6 +70,7 @@
           <div style="flex:1"><h2>Link WhatsApp</h2><p class="hint" style="margin:0">Open WhatsApp → Linked devices → Link a device, then scan.</p></div>
         </div>
         <img id="qr" alt="QR code" style="width:264px;height:264px;image-rendering:pixelated;border:1px solid var(--bd);border-radius:10px;padding:10px">
+        <p id="qrHint" class="hint" style="margin:10px 0 0" hidden>The QR is not ready yet. The bot is restarting to pair a new device — this page refreshes automatically.</p>
       </div>
 
       <div class="card">
@@ -196,16 +198,34 @@ async function refresh() {
   if (r.status === 401) { $('app').hidden = true; $('login').hidden = false; return; }
   const s = await r.json();
   const cls = s.state === 'connected' ? 'ok' : (s.state === 'connecting' ? 'warn' : 'bad');
-  const label = s.state === 'waiting_qr' ? 'waiting for QR' : s.state;
+  const label = s.state === 'waiting_qr' ? 'waiting for QR'
+              : s.state === 'logged_out' ? 'unlinked — restarting'
+              : s.state;
   $('status').innerHTML =
     '<span class="pill ' + cls + '">' + label + '</span>' +
     '<div class="mut" style="margin-top:10px">Number: ' + (s.number || '—') + ' · Uptime: ' + s.uptime + '</div>';
+  $('unlinkBtn').hidden = s.state !== 'connected';
   if (s.state === 'waiting_qr') {
     $('qrcard').hidden = false;
-    $('qr').src = '/api/qr.png?t=' + Date.now();
+    // Show the QR only once it exists; otherwise explain that the bot is
+    // restarting to pair a new device (avoids a broken-image placeholder).
+    if (s.qr) {
+      $('qr').hidden = false;
+      $('qrHint').hidden = true;
+      $('qr').src = '/api/qr.png?t=' + Date.now();
+    } else {
+      $('qr').hidden = true;
+      $('qrHint').hidden = false;
+    }
   } else {
     $('qrcard').hidden = true;
   }
+}
+async function logoutWhatsApp() {
+  if (!confirm('Unlink WhatsApp? The bot will restart and show a QR to link a number again.')) return;
+  const r = await fetch('/api/logout-wa', { method: 'POST' });
+  if (!r.ok) { alert('Failed: ' + await r.text()); return; }
+  $('unlinkBtn').hidden = true;
 }
 
 /* ---------- API keys ---------- */
