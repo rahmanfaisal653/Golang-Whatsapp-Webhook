@@ -1,5 +1,3 @@
-# How to use this webhook
-
 Send WhatsApp messages from any app through this webhook — no WhatsApp
 integration code needed.
 
@@ -10,7 +8,7 @@ your app ──POST /notify──▶ this webhook ──▶ WhatsApp message
 You make one HTTP request and the webhook delivers the message to a private
 chat or a group chat.
 
-## 1. Get an API key
+## Get an API key
 
 Ask the operator for a key, or create one on the dashboard (**API keys →
 Create key**). Send it in the `X-API-Key` header on every request.

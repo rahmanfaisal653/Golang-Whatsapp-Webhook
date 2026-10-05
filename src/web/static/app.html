@@ -33,11 +33,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
         Dashboard
       </button>
+      <button class="nav-item" data-view="keys" onclick="go('keys')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a4 4 0 1 1-3.2 6.4L7 18.2A2 2 0 1 1 5.8 17l4.8-4.8A4 4 0 0 1 15 7Z"/></svg>
+        API Keys
+      </button>
+      <button class="nav-item" data-view="test" onclick="go('test')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+        Test Message
+      </button>
       <button class="nav-item" data-view="docs" onclick="go('docs')">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"/></svg>
         Docs
       </button>
-      <div class="nav-sub" id="docNav"></div>
     </nav>
     <div class="sidebar-foot">
       <button class="nav-item" onclick="logout()">
@@ -48,11 +55,11 @@
   </aside>
 
   <main class="main">
-    <!-- Dashboard view -->
+    <!-- Dashboard: bot status + linking -->
     <section id="view-dashboard" hidden>
       <div class="page-head">
         <h1>Dashboard</h1>
-        <p>Connection status, WhatsApp linking and API access.</p>
+        <p>Bot status and WhatsApp linking.</p>
       </div>
 
       <div class="card">
@@ -72,12 +79,15 @@
         <img id="qr" alt="QR code" style="width:264px;height:264px;image-rendering:pixelated;border:1px solid var(--bd);border-radius:10px;padding:10px">
         <p id="qrHint" class="hint" style="margin:10px 0 0" hidden>The QR is not ready yet. The bot is restarting to pair a new device — this page refreshes automatically.</p>
       </div>
+    </section>
 
+    <!-- API keys -->
+    <section id="view-keys" hidden>
+      <div class="page-head">
+        <h1>API Keys</h1>
+        <p>Apps call <code class="inline">POST /notify</code> with an <code class="inline">X-API-Key</code> header.</p>
+      </div>
       <div class="card">
-        <div class="card-head">
-          <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a4 4 0 1 1-3.2 6.4L7 18.2A2 2 0 1 1 5.8 17l4.8-4.8A4 4 0 0 1 15 7Z"/></svg></div>
-          <div style="flex:1"><h2>API keys</h2><p class="hint" style="margin:0">Apps call <code class="inline">POST /notify</code> with header <code class="inline">X-API-Key</code>.</p></div>
-        </div>
         <div class="row">
           <input id="label" placeholder="Label (e.g. my-app)" style="flex:1;min-width:180px">
           <button class="btn" onclick="createKey()">Create key</button>
@@ -85,12 +95,15 @@
         <div id="newKey"></div>
         <table id="keys"><tbody></tbody></table>
       </div>
+    </section>
 
+    <!-- Test message -->
+    <section id="view-test" hidden>
+      <div class="page-head">
+        <h1>Test Message</h1>
+        <p>Send a message through the bot to verify the send path.</p>
+      </div>
       <div class="card">
-        <div class="card-head">
-          <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></div>
-          <div style="flex:1"><h2>Send test message</h2><p class="hint" style="margin:0">Deliver a message through the bot to verify the send path.</p></div>
-        </div>
         <label for="targetType">Chat type</label>
         <select id="targetType" onchange="onTargetTypeChange()">
           <option value="private">Private chat</option>
@@ -108,12 +121,8 @@
       </div>
     </section>
 
-    <!-- Docs view -->
+    <!-- Docs -->
     <section id="view-docs" hidden>
-      <div class="page-head">
-        <h1>Documentation</h1>
-        <p>How to send WhatsApp messages from your app through this webhook.</p>
-      </div>
       <article class="doc-body" id="docContent"><p class="mut">Loading…</p></article>
     </section>
   </main>
@@ -121,7 +130,8 @@
 
 <script>
 const $ = id => document.getElementById(id);
-let docList = [];
+const VIEWS = ['dashboard', 'keys', 'test', 'docs'];
+let docSlug = null;
 
 /* ---------- Auth ---------- */
 async function login() {
@@ -141,54 +151,34 @@ async function logout() {
 function showApp() {
   $('login').hidden = true;
   $('app').hidden = false;
-  loadKeys();
-  refresh();
   routeFromHash();
 }
 
 /* ---------- Routing (sidebar) ---------- */
-function go(view, slug) {
-  location.hash = '#/' + view + (slug ? '/' + slug : '');
-}
-function setActive(view, slug) {
-  document.querySelectorAll('.nav-item[data-view]').forEach(b =>
-    b.classList.toggle('active', b.dataset.view === view));
-  document.querySelectorAll('#docNav a').forEach(a =>
-    a.classList.toggle('active', view === 'docs' && a.dataset.slug === slug));
+function go(view) {
+  location.hash = '#/' + view;
 }
 function routeFromHash() {
-  const parts = location.hash.replace(/^#\//, '').split('/');
-  const view = parts[0] === 'docs' ? 'docs' : 'dashboard';
-  $('view-dashboard').hidden = view !== 'dashboard';
-  $('view-docs').hidden = view !== 'docs';
-  if (view === 'docs') {
-    setActive('docs', parts[1]);
-    loadDoc(parts[1] || (docList[0] && docList[0].slug));
-  } else {
-    setActive('dashboard');
-    refresh();
-  }
+  let view = location.hash.replace(/^#\//, '').split('/')[0];
+  if (!VIEWS.includes(view)) view = 'dashboard';
+  VIEWS.forEach(v => { $('view-' + v).hidden = v !== view; });
+  document.querySelectorAll('.nav-item[data-view]').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === view));
+  if (view === 'dashboard') refresh();
+  if (view === 'keys') loadKeys();
+  if (view === 'docs') loadDocs();
 }
 window.addEventListener('hashchange', routeFromHash);
 
 /* ---------- Docs ---------- */
-async function initDocs() {
-  docList = await (await fetch('/api/docs')).json();
-  const nav = $('docNav');
-  nav.innerHTML = '';
-  docList.forEach(d => {
-    const a = document.createElement('a');
-    a.textContent = d.title;
-    a.dataset.slug = d.slug;
-    a.href = '#/docs/' + d.slug;
-    nav.appendChild(a);
-  });
-}
-async function loadDoc(slug) {
-  if (!slug) return;
-  const r = await fetch('/api/docs/' + slug);
+async function loadDocs() {
+  if (!docSlug) {
+    const list = await (await fetch('/api/docs')).json();
+    docSlug = list.length ? list[0].slug : null;
+  }
+  if (!docSlug) { $('docContent').innerHTML = '<p class="mut">No docs.</p>'; return; }
+  const r = await fetch('/api/docs/' + docSlug);
   $('docContent').innerHTML = r.ok ? await r.text() : '<p class="mut">Failed to load.</p>';
-  setActive('docs', slug);
 }
 
 /* ---------- Status / QR ---------- */
@@ -259,6 +249,8 @@ async function createKey() {
   $('label').value = '';
   loadKeys();
 }
+
+/* ---------- Test message ---------- */
 function onTargetTypeChange() {
   const group = $('targetType').value === 'group';
   $('toLabel').textContent = group ? 'Group ID' : 'Phone number';
@@ -291,7 +283,6 @@ function escapeHtml(s) {
 /* ---------- Boot ---------- */
 onTargetTypeChange();
 (async () => {
-  await initDocs();
   const r = await fetch('/api/status');
   if (r.ok) showApp(); else $('login').hidden = false;
 })();

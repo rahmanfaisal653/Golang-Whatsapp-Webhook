@@ -8,21 +8,19 @@ import (
 
 // docs is the single page shown in the docs view, loaded from the repo.
 var docs = []struct {
-	Slug  string
-	Title string
-	File  string
+	Slug string
+	File string
 }{
-	{"usage", "How to use", "docs/usage.md"},
+	{"usage", "docs/usage.md"},
 }
 
 func (s *server) handleDocsList(w http.ResponseWriter, r *http.Request) {
 	type item struct {
-		Slug  string `json:"slug"`
-		Title string `json:"title"`
+		Slug string `json:"slug"`
 	}
 	out := make([]item, 0, len(docs))
 	for _, d := range docs {
-		out = append(out, item{Slug: d.Slug, Title: d.Title})
+		out = append(out, item{Slug: d.Slug})
 	}
 	writeJSON(w, out)
 }
