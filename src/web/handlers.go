@@ -107,11 +107,12 @@ func (s *server) handleKeysList(w http.ResponseWriter, r *http.Request) {
 	type item struct {
 		ID      string `json:"id"`
 		Label   string `json:"label"`
+		Key     string `json:"key"`
 		Created string `json:"created"`
 	}
 	out := make([]item, 0, len(keys))
 	for _, k := range keys {
-		out = append(out, item{ID: k.ID, Label: k.Label, Created: k.Created.Format(time.RFC3339)})
+		out = append(out, item{ID: k.ID, Label: k.Label, Key: k.Key, Created: k.Created.Format(time.RFC3339)})
 	}
 	writeJSON(w, out)
 }

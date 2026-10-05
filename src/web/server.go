@@ -41,6 +41,7 @@ func Start(ctx context.Context, application *app.App) error {
 	mux.HandleFunc("GET /docs", s.handleApp)
 	mux.HandleFunc("GET /api/docs", s.auth.require(s.handleDocsList))
 	mux.HandleFunc("GET /api/docs/{slug}", s.auth.require(s.handleDoc))
+	mux.HandleFunc("GET /api/docs/{slug}/raw", s.auth.require(s.handleDocRaw))
 	mux.HandleFunc("POST /api/login", s.handleLogin)
 	mux.HandleFunc("POST /api/logout", s.handleLogout)
 	mux.HandleFunc("POST /api/logout-wa", s.auth.require(s.handleLogoutWhatsApp))

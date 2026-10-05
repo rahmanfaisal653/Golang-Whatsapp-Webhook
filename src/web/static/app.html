@@ -123,6 +123,9 @@
 
     <!-- Docs -->
     <section id="view-docs" hidden>
+      <div class="row" style="justify-content:flex-end;margin-bottom:12px">
+        <button class="btn ghost" id="copyDocsBtn" onclick="copyDocs()">Copy docs</button>
+      </div>
       <article class="doc-body" id="docContent"><p class="mut">Loading…</p></article>
     </section>
   </main>
@@ -180,6 +183,18 @@ async function loadDocs() {
   const r = await fetch('/api/docs/' + docSlug);
   $('docContent').innerHTML = r.ok ? await r.text() : '<p class="mut">Failed to load.</p>';
 }
+async function copyDocs() {
+  const btn = $('copyDocsBtn');
+  try {
+    const r = await fetch('/api/docs/' + docSlug + '/raw');
+    if (!r.ok) throw new Error(await r.text());
+    await copyText(await r.text());
+    btn.textContent = 'Copied ✓';
+  } catch (e) {
+    btn.textContent = 'Copy failed';
+  }
+  setTimeout(() => { btn.textContent = 'Copy docs'; }, 1500);
+}
 
 /* ---------- Status / QR ---------- */
 async function refresh() {
@@ -227,9 +242,28 @@ async function loadKeys() {
   keys.forEach(k => {
     const tr = document.createElement('tr');
     const label = k.label ? escapeHtml(k.label) : '<span class="mut">(no label)</span>';
-    tr.innerHTML = '<td>' + label + '</td><td class="mut">' + k.created.slice(0, 10) + '</td>' +
-      '<td style="width:1%"><button class="btn danger">Revoke</button></td>';
-    tr.querySelector('button').onclick = async () => {
+    const keyCell = k.key
+      ? '<code class="inline">' + escapeHtml(k.key) + '</code>'
+      : '<span class="mut">(hidden)</span>';
+    tr.innerHTML =
+      '<td>' + label + '</td>' +
+      '<td style="max-width:320px;overflow:hidden;text-overflow:ellipsis">' + keyCell + '</td>' +
+      '<td class="mut">' + k.created.slice(0, 10) + '</td>' +
+      '<td style="width:1%;white-space:nowrap">' +
+        '<button class="btn ghost copyBtn">Copy</button> ' +
+        '<button class="btn danger revokeBtn">Revoke</button>' +
+      '</td>';
+    const copyBtn = tr.querySelector('.copyBtn');
+    if (k.key) {
+      copyBtn.onclick = async () => {
+        await copyText(k.key);
+        copyBtn.textContent = 'Copied ✓';
+        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+      };
+    } else {
+      copyBtn.disabled = true;
+    }
+    tr.querySelector('.revokeBtn').onclick = async () => {
       await fetch('/api/keys/' + k.id, { method: 'DELETE' });
       loadKeys();
     };
@@ -244,8 +278,8 @@ async function createKey() {
   });
   const d = await r.json();
   $('newKey').innerHTML =
-    '<p class="mut" style="margin-top:12px">Copy this key now — it is shown only once:</p>' +
-    '<p><code class="inline">' + d.key + '</code></p>';
+    '<p class="mut" style="margin-top:12px">New key created:</p>' +
+    '<p><code class="inline">' + escapeHtml(d.key) + '</code></p>';
   $('label').value = '';
   loadKeys();
 }
@@ -278,6 +312,21 @@ async function sendTest() {
 }
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+// copyText uses the async clipboard API when available (HTTPS/localhost) and
+// falls back to a hidden textarea for other contexts.
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } finally { document.body.removeChild(ta); }
 }
 
 /* ---------- Boot ---------- */

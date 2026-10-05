@@ -100,10 +100,13 @@ func randomToken(n int) string {
 	return hex.EncodeToString(b)
 }
 
-// APIKey is one stored /notify credential. Only the hash is persisted.
+// APIKey is one stored /notify credential. The hash is used to verify
+// requests; the plaintext is kept so the dashboard can display and copy it
+// (keys.json is 0600 and gitignored, like the WhatsApp session).
 type APIKey struct {
 	ID      string    `json:"id"`
 	Label   string    `json:"label"`
+	Key     string    `json:"key"`
 	Hash    string    `json:"hash"`
 	Created time.Time `json:"created"`
 }
@@ -156,7 +159,7 @@ func createKey(label string) (string, APIKey, error) {
 		return "", APIKey{}, err
 	}
 	plain := randomToken(24)
-	k := APIKey{ID: randomToken(6), Label: label, Hash: hashKey(plain), Created: time.Now()}
+	k := APIKey{ID: randomToken(6), Label: label, Key: plain, Hash: hashKey(plain), Created: time.Now()}
 	keys = append(keys, k)
 	if err := writeKeys(keys); err != nil {
 		return "", APIKey{}, err
