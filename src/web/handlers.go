@@ -7,11 +7,13 @@ import (
 	"image/color"
 	"image/png"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"rsc.io/qr"
 
+	"github.com/local/whatsmeow-base/src/app"
 	"github.com/local/whatsmeow-base/src/notify"
 )
 
@@ -62,6 +64,22 @@ func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		"uptime": s.app.Uptime().Round(time.Second).String(),
 		"qr":     s.app.QR() != "",
 	})
+}
+
+// handleLogs returns the newest log entries. The count is capped so the UI
+// never has to render (or transfer) an unbounded list.
+func (s *server) handleLogs(w http.ResponseWriter, r *http.Request) {
+	limit := 100
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 300 {
+			limit = n
+		}
+	}
+	entries := s.app.Logs().Recent(limit)
+	if entries == nil {
+		entries = []app.LogEntry{}
+	}
+	writeJSON(w, entries)
 }
 
 func (s *server) handleQR(w http.ResponseWriter, r *http.Request) {
@@ -148,26 +166,32 @@ func (s *server) handleSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := notify.Send(r.Context(), s.app.Client, req); err != nil {
+		s.app.Logs().Add("ERROR", "Test", "send to "+req.To+" failed: "+err.Error())
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
+	s.app.Logs().Add("INFO", "Test", "test message sent to "+req.To)
 	writeJSON(w, map[string]string{"status": "sent"})
 }
 
 func (s *server) handleNotify(w http.ResponseWriter, r *http.Request) {
 	if !verifyKey(apiKeyFrom(r)) {
+		s.app.Logs().Add("WARN", "Notify", "rejected: invalid or missing API key")
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	req, err := decodeRequest(w, r)
 	if err != nil {
+		s.app.Logs().Add("WARN", "Notify", "rejected: invalid json body")
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
 	if err := notify.Send(r.Context(), s.app.Client, req); err != nil {
+		s.app.Logs().Add("ERROR", "Notify", "send to "+req.To+" failed: "+err.Error())
 		http.Error(w, fmt.Sprintf("send whatsapp: %v", err), http.StatusBadGateway)
 		return
 	}
+	s.app.Logs().Add("INFO", "Notify", "message sent to "+req.To)
 	fmt.Fprint(w, "notify applied")
 }
 

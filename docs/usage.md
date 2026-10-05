@@ -6,30 +6,60 @@ your app ──POST /notify──▶ this webhook ──▶ WhatsApp message
 ```
 
 You make one HTTP request and the webhook delivers the message to a private
-chat or a group chat.
+chat or a group chat. This guide has six parts:
 
-## Get an API key
+1. Get an API key
+2. Choose a target
+3. Send a request
+4. Code examples
+5. Response reference
+6. Notes
 
-Ask the operator for a key, or create one on the dashboard (**API keys →
-Create key**). Send it in the `X-API-Key` header on every request.
+---
+
+## 1. Get an API key
+
+Every request must be authenticated with an API key.
+
+- Ask the operator for a key, **or**
+- Create one yourself on the dashboard: **API Keys → Create key**.
+
+Send the key in the `X-API-Key` header on every request. Keep it secret — anyone
+holding a valid key can send messages through the bot.
 
 ## 2. Choose a target
 
-| Target | Value | Example |
-|---|---|---|
-| Private chat | `<number>@s.whatsapp.net` | `628123456789@s.whatsapp.net` |
-| Group chat | `<group-id>@g.us` | `120363000000000000@g.us` |
+The `to` field is the destination. There are two kinds of target:
 
-Phone numbers are in international format (no `+`, no spaces). For a group,
-the bot must already be a member of that group.
+### 2.1 Private chat (one person)
+
+| | |
+|---|---|
+| Format | `<number>@s.whatsapp.net` |
+| Example | `628123456789@s.whatsapp.net` |
+
+The number is in international format — no `+`, no spaces, no leading zero.
+
+### 2.2 Group chat
+
+| | |
+|---|---|
+| Format | `<group-id>@g.us` |
+| Example | `120363000000000000@g.us` |
+
+The bot must **already be a member** of the group.
 
 ## 3. Send a request
+
+### 3.1 Endpoint and headers
 
 ```text
 POST https://kroomhook.kroombox.com/notify
 Content-Type: application/json
 X-API-Key: YOUR_API_KEY
 ```
+
+### 3.2 Request body
 
 ```json
 {
@@ -43,15 +73,15 @@ X-API-Key: YOUR_API_KEY
 | `to` | string | yes | target JID — a private number or a group ID |
 | `message` | string | yes | text to deliver |
 
-On success you get:
+### 3.3 Success response
 
 ```text
 notify applied
 ```
 
-## Examples
+## 4. Code examples
 
-### curl
+### 4.1 curl
 
 ```bash
 curl -X POST https://kroomhook.kroombox.com/notify \
@@ -60,7 +90,7 @@ curl -X POST https://kroomhook.kroombox.com/notify \
   -d '{"to":"628123456789@s.whatsapp.net","message":"Hello from curl"}'
 ```
 
-### JavaScript / Node
+### 4.2 JavaScript / Node
 
 ```js
 const res = await fetch("https://kroomhook.kroombox.com/notify", {
@@ -78,7 +108,7 @@ const res = await fetch("https://kroomhook.kroombox.com/notify", {
 console.log(await res.text()); // notify applied
 ```
 
-### PHP
+### 4.3 PHP
 
 ```php
 <?php
@@ -104,7 +134,7 @@ curl_close($ch);
 echo $response; // notify applied
 ```
 
-### Go
+### 4.4 Go
 
 ```go
 payload, _ := json.Marshal(map[string]string{
@@ -123,14 +153,14 @@ if err != nil {
 defer res.Body.Close()
 ```
 
-### Postman
+### 4.5 Postman
 
 1. Method: `POST`
 2. URL: `https://kroomhook.kroombox.com/notify`
 3. Headers: `Content-Type: application/json` and `X-API-Key: YOUR_API_KEY`
-4. Body → raw → JSON (same JSON as above)
+4. Body → raw → JSON (the same JSON as in section 3.2)
 
-## Responses
+## 5. Response reference
 
 | Status | Body | Meaning |
 |---|---|---|
@@ -140,10 +170,10 @@ defer res.Body.Close()
 | `401` | `unauthorized` | missing or invalid API key |
 | `502` | `send whatsapp: ...` | the bot could not deliver the message |
 
-## Notes
+## 6. Notes
 
-- Keep your API key secret — anyone with a valid key can send messages through
-  the bot. Store it in an environment variable, never in client-side code.
+- Keep your API key secret. Store it in an environment variable, never in
+  client-side code.
 - Revoke a leaked key on the dashboard and create a new one.
 - The bot must be connected to WhatsApp for messages to be delivered.
 - Do not send messages in a loop; WhatsApp may rate-limit or block the number.

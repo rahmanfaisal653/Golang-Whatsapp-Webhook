@@ -41,6 +41,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
         Test Message
       </button>
+      <button class="nav-item" data-view="logs" onclick="go('logs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+        Logs
+      </button>
       <button class="nav-item" data-view="docs" onclick="go('docs')">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"/></svg>
         Docs
@@ -121,6 +125,32 @@
       </div>
     </section>
 
+    <!-- Logs -->
+    <section id="view-logs" hidden>
+      <div class="page-head">
+        <h1>Logs</h1>
+        <p>Recent activity from the bot. Newest first, limited to the last 100 lines.</p>
+      </div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="row" style="gap:8px;align-items:center">
+            <label class="filter" for="logLevel">Level</label>
+            <select id="logLevel" onchange="loadLogs()" style="width:auto">
+              <option value="">All</option>
+              <option value="ERROR">Errors</option>
+              <option value="WARN">Warnings</option>
+              <option value="INFO">Info</option>
+            </select>
+          </div>
+          <label class="mut" style="display:flex;gap:6px;align-items:center;font-size:13px">
+            <input type="checkbox" id="logAuto" checked onchange="setLogAuto()" style="width:auto">
+            Auto-refresh
+          </label>
+        </div>
+        <div id="logList" class="log-list"><p class="mut">Loading…</p></div>
+      </div>
+    </section>
+
     <!-- Docs -->
     <section id="view-docs" hidden>
       <div class="row" style="justify-content:flex-end;margin-bottom:12px">
@@ -133,8 +163,9 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const VIEWS = ['dashboard', 'keys', 'test', 'docs'];
+const VIEWS = ['dashboard', 'keys', 'test', 'logs', 'docs'];
 let docSlug = null;
+let logTimer = null;
 
 /* ---------- Auth ---------- */
 async function login() {
@@ -169,7 +200,9 @@ function routeFromHash() {
     b.classList.toggle('active', b.dataset.view === view));
   if (view === 'dashboard') refresh();
   if (view === 'keys') loadKeys();
+  if (view === 'logs') startLogs();
   if (view === 'docs') loadDocs();
+  if (view !== 'logs') stopLogs();
 }
 window.addEventListener('hashchange', routeFromHash);
 
@@ -231,6 +264,36 @@ async function logoutWhatsApp() {
   const r = await fetch('/api/logout-wa', { method: 'POST' });
   if (!r.ok) { alert('Failed: ' + await r.text()); return; }
   $('unlinkBtn').hidden = true;
+}
+
+/* ---------- Logs ---------- */
+function startLogs() {
+  loadLogs();
+  stopLogs();
+  if ($('logAuto').checked) logTimer = setInterval(loadLogs, 3000);
+}
+function stopLogs() {
+  if (logTimer) { clearInterval(logTimer); logTimer = null; }
+}
+function setLogAuto() { startLogs(); }
+async function loadLogs() {
+  const r = await fetch('/api/logs?limit=100');
+  if (!r.ok) { $('logList').innerHTML = '<p class="mut">Failed to load logs.</p>'; return; }
+  const entries = await r.json();
+  const level = $('logLevel').value;
+  const rows = entries.filter(e => !level || e.level === level);
+  if (!rows.length) { $('logList').innerHTML = '<p class="mut">No log entries.</p>'; return; }
+  const html = rows.slice().reverse().map(e => {
+    const t = new Date(e.time).toLocaleTimeString();
+    const cls = e.level === 'ERROR' ? 'error' : (e.level === 'WARN' ? 'warn' : 'info');
+    return '<div class="log-row">' +
+      '<span class="log-time">' + t + '</span>' +
+      '<span class="log-level ' + cls + '">' + e.level + '</span>' +
+      '<span class="log-mod">' + escapeHtml(e.module || '') + '</span>' +
+      '<span class="log-msg">' + escapeHtml(e.message || '') + '</span>' +
+    '</div>';
+  }).join('');
+  $('logList').innerHTML = html;
 }
 
 /* ---------- API keys ---------- */

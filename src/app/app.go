@@ -31,11 +31,25 @@ type App struct {
 
 	loggedOut atomic.Bool
 	restart   chan struct{}
+	logs      *LogBuffer
 }
 
-// New returns an App around an already-created client.
-func New(client *whatsmeow.Client) *App {
-	return &App{Client: client, Started: time.Now(), restart: make(chan struct{}, 1)}
+// New returns an App around an already-created client. logs receives the
+// application's own events (and is shared with the whatsmeow logger).
+func New(client *whatsmeow.Client, logs *LogBuffer) *App {
+	return &App{Client: client, Started: time.Now(), restart: make(chan struct{}, 1), logs: logs}
+}
+
+// Logs returns the shared log buffer for the UI.
+func (a *App) Logs() *LogBuffer {
+	return a.logs
+}
+
+// logf records an application-level log line (visible on the Logs page).
+func (a *App) logf(level, msg string, args ...any) {
+	if a.logs != nil {
+		a.logs.Add(level, "App", fmt.Sprintf(msg, args...))
+	}
 }
 
 // SetQR stores the latest pairing QR payload (empty string clears it).
@@ -96,6 +110,7 @@ func (a *App) Restart() <-chan struct{} {
 func (a *App) MarkLoggedOut() {
 	a.SetQR("")
 	a.loggedOut.Store(true)
+	a.logf("WARN", "WhatsApp device unlinked — restarting to pair a new device")
 	select {
 	case a.restart <- struct{}{}:
 	default: // already signalled
@@ -105,7 +120,9 @@ func (a *App) MarkLoggedOut() {
 // Logout unlinks the device from WhatsApp (user-initiated) and requests a
 // restart so the bot returns ready to pair a new device.
 func (a *App) Logout(ctx context.Context) error {
+	a.logf("INFO", "unlink requested from dashboard")
 	if err := a.Client.Logout(ctx); err != nil {
+		a.logf("ERROR", "logout failed: %v", err)
 		return err
 	}
 	a.MarkLoggedOut()
@@ -117,14 +134,22 @@ func (a *App) Logout(ctx context.Context) error {
 // goroutine. Once connected, whatsmeow keeps the connection alive itself.
 func (a *App) Connect(ctx context.Context) error {
 	if a.Client.Store.ID != nil {
-		return a.Client.Connect()
+		a.logf("INFO", "reconnecting saved session")
+		err := a.Client.Connect()
+		if err != nil {
+			a.logf("ERROR", "reconnect failed: %v", err)
+		}
+		return err
 	}
 
+	a.logf("INFO", "no saved session — waiting for QR scan")
 	qr, err := a.Client.GetQRChannel(ctx)
 	if err != nil {
+		a.logf("ERROR", "open QR channel: %v", err)
 		return fmt.Errorf("open QR channel: %w", err)
 	}
 	if err := a.Client.Connect(); err != nil {
+		a.logf("ERROR", "connect failed: %v", err)
 		return err
 	}
 	for ev := range qr {
@@ -133,11 +158,14 @@ func (a *App) Connect(ctx context.Context) error {
 			a.SetQR(ev.Code)
 		case "success":
 			a.SetQR("")
+			a.logf("INFO", "device paired successfully")
 			return nil
 		default:
 			if ev.Error != nil {
+				a.logf("ERROR", "WhatsApp login ended: %v", ev.Error)
 				return ev.Error
 			}
+			a.logf("WARN", "WhatsApp login ended: %s", ev.Event)
 			return fmt.Errorf("WhatsApp login ended: %s", ev.Event)
 		}
 	}

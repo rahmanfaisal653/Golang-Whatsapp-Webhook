@@ -25,7 +25,25 @@ func newTestApp(t *testing.T) *App {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return New(whatsmeow.NewClient(dev, waLog.Noop))
+	return New(whatsmeow.NewClient(dev, waLog.Noop), NewLogBuffer(50))
+}
+
+// LogBuffer keeps only the newest entries and returns them oldest-first.
+func TestLogBufferCapAndOrder(t *testing.T) {
+	b := NewLogBuffer(3)
+	for _, m := range []string{"a", "b", "c", "d"} {
+		b.Add("INFO", "Test", m)
+	}
+	got := b.Recent(0)
+	if len(got) != 3 {
+		t.Fatalf("len = %d, want 3 (capped)", len(got))
+	}
+	if got[0].Message != "b" || got[2].Message != "d" {
+		t.Fatalf("order = %q..%q, want b..d", got[0].Message, got[2].Message)
+	}
+	if r := b.Recent(1); len(r) != 1 || r[0].Message != "d" {
+		t.Fatalf("Recent(1) = %+v, want just d", r)
+	}
 }
 
 // A fresh, unpaired app reports waiting_qr (not connected).

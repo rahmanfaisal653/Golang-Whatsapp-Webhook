@@ -13,7 +13,6 @@ import (
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
-	waLog "go.mau.fi/whatsmeow/util/log"
 	_ "modernc.org/sqlite"
 
 	"github.com/local/whatsmeow-base/commands/owner"
@@ -24,10 +23,11 @@ import (
 
 func main() {
 	ctx := context.Background()
-	client, cleanup := newClient(ctx)
+	logs := app.NewLogBuffer(300)
+	client, cleanup := newClient(ctx, logs)
 	defer cleanup()
 
-	application := app.New(client)
+	application := app.New(client, logs)
 
 	if len(os.Args) > 1 && os.Args[1] == "--list-groups" {
 		if err := application.Connect(ctx); err != nil {
@@ -45,8 +45,15 @@ func main() {
 	// reconnect. Ask main to exit so the supervisor (PM2) restarts a fresh
 	// process, which creates a new device and shows a new QR to pair again.
 	client.AddEventHandler(func(evt any) {
-		if _, ok := evt.(*events.LoggedOut); ok {
+		switch e := evt.(type) {
+		case *events.LoggedOut:
 			application.MarkLoggedOut()
+		case *events.Connected:
+			logs.Add("INFO", "App", "connected to WhatsApp")
+		case *events.Disconnected:
+			logs.Add("WARN", "App", "disconnected from WhatsApp — reconnecting")
+		case *events.ConnectFailure:
+			logs.Add("ERROR", "App", fmt.Sprintf("connect failed: %v", e.Reason))
 		}
 	})
 
@@ -95,11 +102,11 @@ func main() {
 	}
 }
 
-func newClient(ctx context.Context) (*whatsmeow.Client, func()) {
+func newClient(ctx context.Context, logs *app.LogBuffer) (*whatsmeow.Client, func()) {
 	if err := os.MkdirAll(filepath.Join("src", "session"), 0o700); err != nil {
 		fatal("create data directory", err)
 	}
-	store, err := sqlstore.New(ctx, "sqlite", sqliteURI(filepath.Join("src", "session", "whatsmeow.db")), waLog.Stdout("Database", "INFO", true))
+	store, err := sqlstore.New(ctx, "sqlite", sqliteURI(filepath.Join("src", "session", "whatsmeow.db")), logs.Logger("Database", "INFO", true))
 	if err != nil {
 		fatal("open device store", err)
 	}
@@ -108,7 +115,7 @@ func newClient(ctx context.Context) (*whatsmeow.Client, func()) {
 		store.Close()
 		fatal("load device", err)
 	}
-	return whatsmeow.NewClient(device, waLog.Stdout("WhatsApp", "INFO", true)), func() { store.Close() }
+	return whatsmeow.NewClient(device, logs.Logger("WhatsApp", "INFO", true)), func() { store.Close() }
 }
 
 func listGroups(ctx context.Context, client *whatsmeow.Client) error {

@@ -119,6 +119,24 @@ tbody tr:hover{background:var(--hover)}
 .doc-body th,.doc-body td{border:1px solid var(--bd);padding:8px 11px}
 .doc-body a{color:#2A5DB0}
 
+/* ---------- Logs ---------- */
+.log-list{max-height:560px;overflow:auto;border:1px solid var(--bd);border-radius:var(--r);
+  background:#FBFCFD;margin-top:14px;font-family:var(--mono)}
+.log-row{display:grid;grid-template-columns:78px 62px 130px 1fr;gap:10px;align-items:baseline;
+  padding:7px 12px;border-bottom:1px solid var(--bd);font-size:12.5px;line-height:1.5}
+.log-row:last-child{border-bottom:0}
+.log-time{color:var(--mut);white-space:nowrap}
+.log-level{font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.log-level.info{color:var(--mut)}
+.log-level.warn{color:var(--warn)}
+.log-level.error{color:var(--bad)}
+.log-mod{color:#6B7A93;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-msg{color:var(--ink);word-break:break-word}
+@media(max-width:760px){
+  .log-row{grid-template-columns:1fr;gap:2px}
+  .log-mod{white-space:normal}
+}
+
 @media(max-width:760px){
   .app{flex-direction:column}
   .sidebar{width:auto;height:auto;position:static;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px}
