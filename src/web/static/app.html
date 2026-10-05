@@ -97,7 +97,13 @@
             </label>
           </div>
         </div>
-        <div id="logTerminal" class="terminal" tabindex="0"><div class="term-empty">Loading…</div></div>
+        <div class="term-window">
+          <div class="term-bar">
+            <span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span>
+            <span class="term-title">gowa-webhook — logs</span>
+          </div>
+          <div id="logTerminal" class="terminal" tabindex="0"></div>
+        </div>
       </div>
     </section>
 
@@ -277,7 +283,7 @@ function renderLogs() {
   const level = $('logLevel').value;
   const rows = level ? all.filter(e => e.level === level) : all;
   if (!rows.length) {
-    term.innerHTML = '<div class="term-empty">No log entries.</div>';
+    term.innerHTML = '<div class="term-empty">no entries</div><div class="term-line"><span class="term-prompt">$</span> <span class="term-cursor"></span></div>';
     lastLogSig = '';
     return;
   }
@@ -295,7 +301,8 @@ function renderLogs() {
       '<span class="term-mod">' + escapeHtml(e.module || '') + '</span> ' +
       '<span class="term-msg">' + escapeHtml(e.message || '') + '</span>' +
     '</div>';
-  }).join('');
+  }).join('') +
+  '<div class="term-line"><span class="term-prompt">$</span> <span class="term-cursor"></span></div>';
   if (atBottom) term.scrollTop = term.scrollHeight;
 }
 

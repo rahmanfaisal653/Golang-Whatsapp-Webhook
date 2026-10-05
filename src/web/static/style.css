@@ -119,23 +119,38 @@ tbody tr:hover{background:var(--hover)}
 .doc-body th,.doc-body td{border:1px solid var(--bd);padding:8px 11px}
 .doc-body a{color:#2A5DB0}
 
-/* ---------- Terminal log (dashboard) ---------- */
-.terminal{background:#0F1622;border:1px solid #1E2A3A;border-radius:var(--r);
-  padding:12px 14px;height:340px;overflow:auto;font-family:var(--mono);font-size:12.5px;
-  line-height:1.65;color:#C6D2E2;scrollbar-width:thin}
-.terminal:focus{outline:none;box-shadow:0 0 0 3px rgba(26,43,76,.08)}
-.term-line{white-space:pre-wrap;word-break:break-word;padding:1px 0}
-.term-time{color:#5B6B84}
+/* ---------- Terminal window (dashboard log) ---------- */
+.term-window{border-radius:10px;overflow:hidden;border:1px solid #05080d;
+  box-shadow:0 12px 30px rgba(5,8,13,.35);background:#000}
+.term-bar{display:flex;align-items:center;gap:7px;padding:9px 13px;background:#1b1f27;
+  border-bottom:1px solid #05080d}
+.term-dot{width:12px;height:12px;border-radius:50%;flex:none}
+.term-dot.red{background:#ff5f56}
+.term-dot.yellow{background:#ffbd2e}
+.term-dot.green{background:#27c93f}
+.term-title{flex:1;text-align:center;color:#8b93a1;font-size:12px;
+  font-family:var(--mono);letter-spacing:.3px;margin-right:36px}
+.terminal{background:#000;color:#c8d3e0;padding:12px 14px;height:340px;overflow:auto;
+  font-family:var(--mono);font-size:12.5px;line-height:1.7;scrollbar-width:thin}
+.terminal::-webkit-scrollbar{width:10px}
+.terminal::-webkit-scrollbar-thumb{background:#2a2f39;border-radius:6px}
+.term-line{white-space:pre-wrap;word-break:break-word;padding:0}
+.term-time{color:#4d5866}
 .term-lv{font-weight:700}
-.term-lv.info{color:#4EA1FF}
-.term-lv.warn{color:#E3B341}
-.term-lv.error{color:#FF6B6B}
-.term-mod{color:#7D8FA9}
-.term-msg{color:#D7E0EC}
-.term-empty{color:#5B6B84}
+.term-lv.info{color:#3fb950}
+.term-lv.warn{color:#d29922}
+.term-lv.error{color:#f85149}
+.term-mod{color:#7d8798}
+.term-msg{color:#d6dee9}
+.term-empty{color:#5b6675;font-style:italic}
+.term-prompt{color:#3fb950;font-weight:700}
+.term-cursor{display:inline-block;width:8px;height:15px;background:#3fb950;
+  vertical-align:-2px;animation:blink 1.05s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
 @media(max-width:760px){
   .terminal{height:260px}
+  .term-title{margin-right:0}
 }
 
 @media(max-width:760px){
