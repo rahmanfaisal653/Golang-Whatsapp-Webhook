@@ -41,10 +41,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
         Test Message
       </button>
-      <button class="nav-item" data-view="logs" onclick="go('logs')">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
-        Logs
-      </button>
       <button class="nav-item" data-view="docs" onclick="go('docs')">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5A2.5 2.5 0 0 1 4 20.5z"/></svg>
         Docs
@@ -82,6 +78,26 @@
         </div>
         <img id="qr" alt="QR code" style="width:264px;height:264px;image-rendering:pixelated;border:1px solid var(--bd);border-radius:10px;padding:10px">
         <p id="qrHint" class="hint" style="margin:10px 0 0" hidden>The QR is not ready yet. The bot is restarting to pair a new device — this page refreshes automatically.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="icon-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></div>
+          <div style="flex:1"><h2>Live log</h2><p class="hint" style="margin:0">Recent bot activity — newest at the bottom.</p></div>
+          <div class="row" style="gap:8px;align-items:center">
+            <select id="logLevel" onchange="renderLogs()" style="width:auto;margin:0">
+              <option value="">All levels</option>
+              <option value="ERROR">Errors</option>
+              <option value="WARN">Warnings</option>
+              <option value="INFO">Info</option>
+            </select>
+            <label class="mut" style="display:flex;gap:6px;align-items:center;font-size:12.5px;margin:0">
+              <input type="checkbox" id="logAuto" checked onchange="setLogAuto()" style="width:auto;margin:0">
+              Auto
+            </label>
+          </div>
+        </div>
+        <div id="logTerminal" class="terminal" tabindex="0"><div class="term-empty">Loading…</div></div>
       </div>
     </section>
 
@@ -125,32 +141,6 @@
       </div>
     </section>
 
-    <!-- Logs -->
-    <section id="view-logs" hidden>
-      <div class="page-head">
-        <h1>Logs</h1>
-        <p>Recent activity from the bot. Newest first, limited to the last 100 lines.</p>
-      </div>
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div class="row" style="gap:8px;align-items:center">
-            <label class="filter" for="logLevel">Level</label>
-            <select id="logLevel" onchange="loadLogs()" style="width:auto">
-              <option value="">All</option>
-              <option value="ERROR">Errors</option>
-              <option value="WARN">Warnings</option>
-              <option value="INFO">Info</option>
-            </select>
-          </div>
-          <label class="mut" style="display:flex;gap:6px;align-items:center;font-size:13px">
-            <input type="checkbox" id="logAuto" checked onchange="setLogAuto()" style="width:auto">
-            Auto-refresh
-          </label>
-        </div>
-        <div id="logList" class="log-list"><p class="mut">Loading…</p></div>
-      </div>
-    </section>
-
     <!-- Docs -->
     <section id="view-docs" hidden>
       <div class="row" style="justify-content:flex-end;margin-bottom:12px">
@@ -163,7 +153,7 @@
 
 <script>
 const $ = id => document.getElementById(id);
-const VIEWS = ['dashboard', 'keys', 'test', 'logs', 'docs'];
+const VIEWS = ['dashboard', 'keys', 'test', 'docs'];
 let docSlug = null;
 let logTimer = null;
 
@@ -198,11 +188,9 @@ function routeFromHash() {
   VIEWS.forEach(v => { $('view-' + v).hidden = v !== view; });
   document.querySelectorAll('.nav-item[data-view]').forEach(b =>
     b.classList.toggle('active', b.dataset.view === view));
-  if (view === 'dashboard') refresh();
+  if (view === 'dashboard') { refresh(); startLogs(); } else { stopLogs(); }
   if (view === 'keys') loadKeys();
-  if (view === 'logs') startLogs();
   if (view === 'docs') loadDocs();
-  if (view !== 'logs') stopLogs();
 }
 window.addEventListener('hashchange', routeFromHash);
 
@@ -266,7 +254,7 @@ async function logoutWhatsApp() {
   $('unlinkBtn').hidden = true;
 }
 
-/* ---------- Logs ---------- */
+/* ---------- Logs (terminal on the dashboard) ---------- */
 function startLogs() {
   loadLogs();
   stopLogs();
@@ -276,24 +264,39 @@ function stopLogs() {
   if (logTimer) { clearInterval(logTimer); logTimer = null; }
 }
 function setLogAuto() { startLogs(); }
+let lastLogSig = '';
 async function loadLogs() {
-  const r = await fetch('/api/logs?limit=100');
-  if (!r.ok) { $('logList').innerHTML = '<p class="mut">Failed to load logs.</p>'; return; }
-  const entries = await r.json();
+  const r = await fetch('/api/logs?limit=200');
+  if (!r.ok) return;
+  window.__logs = await r.json();
+  renderLogs();
+}
+function renderLogs() {
+  const term = $('logTerminal');
+  const all = window.__logs || [];
   const level = $('logLevel').value;
-  const rows = entries.filter(e => !level || e.level === level);
-  if (!rows.length) { $('logList').innerHTML = '<p class="mut">No log entries.</p>'; return; }
-  const html = rows.slice().reverse().map(e => {
-    const t = new Date(e.time).toLocaleTimeString();
-    const cls = e.level === 'ERROR' ? 'error' : (e.level === 'WARN' ? 'warn' : 'info');
-    return '<div class="log-row">' +
-      '<span class="log-time">' + t + '</span>' +
-      '<span class="log-level ' + cls + '">' + e.level + '</span>' +
-      '<span class="log-mod">' + escapeHtml(e.module || '') + '</span>' +
-      '<span class="log-msg">' + escapeHtml(e.message || '') + '</span>' +
+  const rows = level ? all.filter(e => e.level === level) : all;
+  if (!rows.length) {
+    term.innerHTML = '<div class="term-empty">No log entries.</div>';
+    lastLogSig = '';
+    return;
+  }
+  const sig = rows.length + '|' + rows[rows.length - 1].time + '|' + level;
+  if (sig === lastLogSig) return; // nothing new — avoid re-render and scroll jump
+  lastLogSig = sig;
+  // stick to the bottom unless the user has scrolled up to read history
+  const atBottom = term.scrollHeight - term.scrollTop - term.clientHeight < 24;
+  term.innerHTML = rows.map(e => {
+    const t = new Date(e.time).toLocaleTimeString('en-GB');
+    const lv = e.level.toLowerCase();
+    return '<div class="term-line">' +
+      '<span class="term-time">' + t + '</span> ' +
+      '<span class="term-lv ' + lv + '">' + e.level.padEnd(5) + '</span> ' +
+      '<span class="term-mod">' + escapeHtml(e.module || '') + '</span> ' +
+      '<span class="term-msg">' + escapeHtml(e.message || '') + '</span>' +
     '</div>';
   }).join('');
-  $('logList').innerHTML = html;
+  if (atBottom) term.scrollTop = term.scrollHeight;
 }
 
 /* ---------- API keys ---------- */
