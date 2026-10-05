@@ -33,7 +33,7 @@ The `to` field is the destination. There are two kinds of target:
 
 ### 2.1 Private chat (one person)
 
-| | |
+| Field | Value |
 |---|---|
 | Format | `<number>@s.whatsapp.net` |
 | Example | `628123456789@s.whatsapp.net` |
@@ -42,7 +42,7 @@ The number is in international format — no `+`, no spaces, no leading zero.
 
 ### 2.2 Group chat
 
-| | |
+| Field | Value |
 |---|---|
 | Format | `<group-id>@g.us` |
 | Example | `120363000000000000@g.us` |

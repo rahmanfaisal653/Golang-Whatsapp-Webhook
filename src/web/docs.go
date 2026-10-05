@@ -4,7 +4,16 @@ import (
 	"bytes"
 	"net/http"
 	"os"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 )
+
+// newMarkdown builds the renderer used for every doc. The table extension is
+// required so GFM tables render as HTML instead of leaking raw "|" pipes.
+func newMarkdown() goldmark.Markdown {
+	return goldmark.New(goldmark.WithExtensions(extension.Table))
+}
 
 // docs is the single page shown in the docs view, loaded from the repo.
 var docs = []struct {

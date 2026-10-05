@@ -27,7 +27,7 @@ type server struct {
 
 // Start runs the HTTP server until ctx is cancelled.
 func Start(ctx context.Context, application *app.App) error {
-	s := &server{app: application, auth: newAuth(), md: goldmark.New()}
+	s := &server{app: application, auth: newAuth(), md: newMarkdown()}
 
 	sub, err := fs.Sub(staticFiles, "static")
 	if err != nil {
