@@ -20,14 +20,15 @@ import (
 var staticFiles embed.FS
 
 type server struct {
-	app  *app.App
-	auth *auth
-	md   goldmark.Markdown
+	app   *app.App
+	auth  *auth
+	md    goldmark.Markdown
+	guard *guard
 }
 
 // Start runs the HTTP server until ctx is cancelled.
 func Start(ctx context.Context, application *app.App) error {
-	s := &server{app: application, auth: newAuth(), md: newMarkdown()}
+	s := &server{app: application, auth: newAuth(), md: newMarkdown(), guard: newGuard()}
 
 	sub, err := fs.Sub(staticFiles, "static")
 	if err != nil {

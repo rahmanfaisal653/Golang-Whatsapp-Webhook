@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -175,7 +176,8 @@ func (s *server) handleSend(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) handleNotify(w http.ResponseWriter, r *http.Request) {
-	if !verifyKey(apiKeyFrom(r)) {
+	key := apiKeyFrom(r)
+	if !verifyKey(key) {
 		s.app.Logs().Add("WARN", "Notify", "rejected: invalid or missing API key")
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -186,7 +188,16 @@ func (s *server) handleNotify(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
-	if err := notify.Send(r.Context(), s.app.Client, req); err != nil {
+	err = s.guard.Do(r.Context(), key, req.To, req.Message, func() error {
+		return notify.Send(r.Context(), s.app.Client, req)
+	})
+	if err != nil {
+		var rej *rejection
+		if errors.As(err, &rej) {
+			s.app.Logs().Add("WARN", "Notify", "throttled to "+req.To+": "+rej.msg)
+			http.Error(w, rej.msg, rej.status)
+			return
+		}
 		s.app.Logs().Add("ERROR", "Notify", "send to "+req.To+" failed: "+err.Error())
 		http.Error(w, fmt.Sprintf("send whatsapp: %v", err), http.StatusBadGateway)
 		return
