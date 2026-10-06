@@ -3,7 +3,9 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -132,5 +134,64 @@ func TestGuardDayRollover(t *testing.T) {
 	day = day.Add(24 * time.Hour) // next day
 	if err := g.Do(context.Background(), "k", "b@s", "m", ok); err != nil {
 		t.Fatalf("after rollover: %v", err)
+	}
+}
+
+// A realistic burst to many new numbers is stopped by the new-recipient cap.
+func TestGuardBurstScenario(t *testing.T) {
+	g := newTestGuard()
+	g.dailyLimit = 200
+	g.newTargetLimit = 50
+	ok := func() error { return nil }
+
+	var sent, throttled int
+	for i := 0; i < 300; i++ {
+		to := fmt.Sprintf("628%09d@s.whatsapp.net", i)
+		err := g.Do(context.Background(), "k", to, "promo "+strconv.Itoa(i), ok)
+		var rej *rejection
+		if errors.As(err, &rej) {
+			throttled++
+		} else if err == nil {
+			sent++
+		} else {
+			t.Fatalf("send %d: unexpected error %v", i, err)
+		}
+	}
+	if sent != 50 || throttled != 250 {
+		t.Fatalf("burst: sent=%d throttled=%d, want sent=50 throttled=250", sent, throttled)
+	}
+}
+
+// The daily cap stops a caller looping the same recipient with fresh text.
+func TestGuardDailyCapOnRepeat(t *testing.T) {
+	g := newTestGuard()
+	g.dailyLimit = 5
+	g.newTargetLimit = 0 // disable the new-recipient cap
+	ok := func() error { return nil }
+
+	sent := 0
+	for i := 0; i < 10; i++ {
+		err := g.Do(context.Background(), "k", "a@s", "msg "+strconv.Itoa(i), ok)
+		if err == nil {
+			sent++
+		}
+	}
+	if sent != 5 {
+		t.Fatalf("sent=%d, want 5 (daily cap)", sent)
+	}
+}
+
+// Environment variables override the built-in limits.
+func TestGuardEnvOverride(t *testing.T) {
+	t.Setenv("NOTIFY_DAILY_LIMIT", "7")
+	t.Setenv("NOTIFY_NEW_TARGET_LIMIT", "3")
+	t.Setenv("NOTIFY_MIN_DELAY_MS", "1000")
+	t.Setenv("NOTIFY_MAX_DELAY_MS", "2000")
+	g := newGuard()
+	if g.dailyLimit != 7 || g.newTargetLimit != 3 {
+		t.Fatalf("limits = %d/%d, want 7/3", g.dailyLimit, g.newTargetLimit)
+	}
+	if g.minDelay != time.Second || g.maxDelay != 2*time.Second {
+		t.Fatalf("delays = %v-%v, want 1s-2s", g.minDelay, g.maxDelay)
 	}
 }
