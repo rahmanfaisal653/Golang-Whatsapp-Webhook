@@ -168,30 +168,12 @@ defer res.Body.Close()
 | `400` | `invalid json` | request body is not valid JSON |
 | `400` | `invalid notify request` | `to` or `message` missing/empty, or bad JID |
 | `401` | `unauthorized` | missing or invalid API key |
-| `409` | `duplicate message suppressed...` | same text to the same recipient within 60s |
-| `429` | `daily limit reached...` | your key hit its per-day message cap |
-| `429` | `daily new-recipient limit reached...` | your key messaged too many new numbers today |
-| `429` | `too many requests, slow down` | a burst was detected; wait and retry |
 | `502` | `send whatsapp: ...` | the bot could not deliver the message |
 
-## 6. Sending limits
-
-To protect the number from being flagged as spam, each API key is throttled:
-
-- at most **200 messages per day**;
-- at most **50 new recipients per day**;
-- the same text to the same recipient is suppressed for **60 seconds**;
-- consecutive sends are spaced by a **random 5–15 seconds**.
-
-If you need different limits, ask the operator (they are set with environment
-variables on the server). Hitting a limit returns `429`; a duplicate returns `409`.
-
-## 7. Notes
+## 6. Notes
 
 - Keep your API key secret. Store it in an environment variable, never in
   client-side code.
 - Revoke a leaked key on the dashboard and create a new one.
 - The bot must be connected to WhatsApp for messages to be delivered.
 - Do not send messages in a loop; WhatsApp may rate-limit or block the number.
-- These limits reduce the risk of a ban, but cannot guarantee one will not happen:
-  WhatsApp decides that, mainly based on who you message and how often.
