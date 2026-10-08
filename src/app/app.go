@@ -130,8 +130,10 @@ func (a *App) Logout(ctx context.Context) error {
 }
 
 // Connect pairs via QR when no session is saved, otherwise reconnects the
-// saved session. It blocks until the outcome is known, so run it in a
-// goroutine. Once connected, whatsmeow keeps the connection alive itself.
+// saved session. When pairing, a QR code only lives a couple of minutes; if the
+// scan does not happen in time whatsmeow ends the channel. Instead of giving up
+// (which leaves a stale, unscannable QR on the dashboard) we request a fresh QR
+// and keep going until pairing succeeds or the context is cancelled.
 func (a *App) Connect(ctx context.Context) error {
 	if a.Client.Store.ID != nil {
 		a.logf("INFO", "reconnecting saved session")
@@ -142,14 +144,32 @@ func (a *App) Connect(ctx context.Context) error {
 		return err
 	}
 
+	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if err := a.pairOnce(ctx); err != nil {
+			a.logf("WARN", "pairing attempt ended (%v) — requesting a new QR", err)
+			select {
+			case <-time.After(2 * time.Second):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+			continue
+		}
+		return nil
+	}
+}
+
+// pairOnce opens one QR channel and blocks until pairing succeeds or the
+// channel ends. Each time whatsmeow rotates the code a new QR is published.
+func (a *App) pairOnce(ctx context.Context) error {
 	a.logf("INFO", "no saved session — waiting for QR scan")
 	qr, err := a.Client.GetQRChannel(ctx)
 	if err != nil {
-		a.logf("ERROR", "open QR channel: %v", err)
 		return fmt.Errorf("open QR channel: %w", err)
 	}
 	if err := a.Client.Connect(); err != nil {
-		a.logf("ERROR", "connect failed: %v", err)
 		return err
 	}
 	for ev := range qr {
@@ -162,10 +182,8 @@ func (a *App) Connect(ctx context.Context) error {
 			return nil
 		default:
 			if ev.Error != nil {
-				a.logf("ERROR", "WhatsApp login ended: %v", ev.Error)
 				return ev.Error
 			}
-			a.logf("WARN", "WhatsApp login ended: %s", ev.Event)
 			return fmt.Errorf("WhatsApp login ended: %s", ev.Event)
 		}
 	}
